@@ -1,0 +1,397 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Custom color palette by Ilias Ism */
+    --gradient: linear-gradient(to top left, #0f2027, #203a43, #2c5364);
+
+    --background: 210 97.2% 98.22%;
+    --foreground: 210 4.4% 0.44%;
+
+    --muted: 210 4.4% 91.1%;
+    --muted-foreground: 210 2.2% 41.1%;
+
+    --popover: 210 54.8% 91.1%;
+    --popover-foreground: 210 4.4% 0.55%;
+
+    --card: 210 54.8% 91.1%;
+    --card-foreground: 210 4.4% 0.55%;
+
+    --border: 210 9.4% 89.44%;
+    --input: 210 9.4% 89.44%;
+
+    --primary: 210 44% 11%;
+    --primary-foreground: 210 0.88% 91.1%;
+
+    --secondary: 210 2.2% 95.55%;
+    --secondary-foreground: 210 3.64% 11.1%;
+
+    --accent: 210 2.2% 95.55%;
+    --accent-foreground: 210 3.64% 11.1%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --ring: 210 44% 11%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Dark mode version of the custom palette */
+    --gradient: linear-gradient(to top left, #0f2027, #203a43, #2c5364);
+
+    --background: 210 50% 3.1%;
+    --foreground: 210 20% 98%;
+
+    --muted: 210 40% 10%;
+    --muted-foreground: 210 20% 60%;
+
+    --popover: 210 45% 5%;
+    --popover-foreground: 210 20% 98%;
+
+    --card: 210 45% 5%;
+    --card-foreground: 210 20% 98%;
+
+    --border: 210 40% 15%;
+    --input: 210 40% 15%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 210 40% 9%;
+
+    --secondary: 210 40% 15%;
+    --secondary-foreground: 210 20% 98%;
+
+    --accent: 210 40% 15%;
+    --accent-foreground: 210 20% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 20% 98%;
+
+    --ring: 210 40% 70%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* Custom scrollbar for webkit browsers */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 32, 39, 0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(32, 58, 67, 0.3);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(44, 83, 100, 0.5);
+}
+
+/* Ticker animation for live updates */
+@keyframes ticker {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+.ticker-animation {
+  animation: ticker 20s linear infinite;
+}
+
+/* Gradient text animation */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 5s ease infinite;
+}
+
+/* Subtle pulse animation */
+@keyframes pulse-subtle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+/* Glass morphism effect */
+.glass-effect {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Radial gradient for logo fade */
+.bg-gradient-radial {
+  background-image: radial-gradient(var(--tw-gradient-stops));
+}
+
+/* Simplified glowing border effect */
+.glowing-border {
+  position: relative;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.glowing-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.7) 0%,
+    rgba(255, 255, 255, 0.9) 25%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0.9) 75%,
+    rgba(255, 255, 255, 0.7) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: pulse-glow 3s ease-in-out infinite;
+  box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.5);
+  filter: blur(2px);
+}
+
+.glowing-border::after {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  background: transparent;
+  box-shadow: 0 0 15px 5px rgba(255, 255, 255, 0.2);
+  animation: pulse-glow 4s ease-in-out infinite alternate;
+  pointer-events: none;
+  z-index: -1;
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    opacity: 0.5;
+    filter: blur(2px);
+  }
+  50% {
+    opacity: 1;
+    filter: blur(3px);
+  }
+}
+
+/* Dark mode enhancements for more dramatic glow */
+.dark .glowing-border::before {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(255, 255, 255, 0.95) 25%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0.95) 75%,
+    rgba(255, 255, 255, 0.8) 100%
+  );
+  box-shadow: 0 0 20px 8px rgba(255, 255, 255, 0.6);
+  filter: blur(3px);
+}
+
+.dark .glowing-border::after {
+  box-shadow: 0 0 25px 10px rgba(255, 255, 255, 0.3);
+}
+
+/* Timeline active item glow effects */
+.active-node {
+  /* box-shadow: 0 0 10px 2px rgba(59, 130, 246, 0.5); */ /* Commented out generic blue shadow */
+  border-color: rgba(59, 130, 246, 0.8); /* Keep border color change */
+  animation: pulse-glow 2s ease-in-out infinite; /* Keep subtle pulse */
+}
+
+.dark .active-node {
+  /* box-shadow: 0 0 12px 3px rgba(59, 130, 246, 0.6); */ /* Commented out generic blue shadow */
+}
+
+/* Timeline item glow colors */
+.timeline-glow-purple {
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+  border-color: rgba(168, 85, 247, 0.4);
+  background-color: rgba(168, 85, 247, 0.05);
+}
+
+.timeline-glow-indigo {
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+  border-color: rgba(99, 102, 241, 0.4);
+  background-color: rgba(99, 102, 241, 0.05);
+}
+
+.timeline-glow-cyan {
+  box-shadow: 0 0 15px rgba(34, 211, 238, 0.3);
+  border-color: rgba(34, 211, 238, 0.4);
+  background-color: rgba(34, 211, 238, 0.05);
+}
+
+.timeline-glow-blue {
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.3);
+  border-color: rgba(59, 130, 246, 0.4);
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+.timeline-glow-teal {
+  box-shadow: 0 0 15px rgba(20, 184, 166, 0.3);
+  border-color: rgba(20, 184, 166, 0.4);
+  background-color: rgba(20, 184, 166, 0.05);
+}
+
+.timeline-glow-emerald {
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+  border-color: rgba(16, 185, 129, 0.4);
+  background-color: rgba(16, 185, 129, 0.05);
+}
+
+.timeline-glow-green {
+  box-shadow: 0 0 15px rgba(34, 197, 94, 0.3);
+  border-color: rgba(34, 197, 94, 0.4);
+  background-color: rgba(34, 197, 94, 0.05);
+}
+
+.timeline-glow-amber {
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.3);
+  border-color: rgba(245, 158, 11, 0.4);
+  background-color: rgba(245, 158, 11, 0.05);
+}
+
+.timeline-glow-orange {
+  box-shadow: 0 0 15px rgba(249, 115, 22, 0.3);
+  border-color: rgba(249, 115, 22, 0.4);
+  background-color: rgba(249, 115, 22, 0.05);
+}
+
+.timeline-glow-rose {
+  box-shadow: 0 0 15px rgba(244, 63, 94, 0.3);
+  border-color: rgba(244, 63, 94, 0.4);
+  background-color: rgba(244, 63, 94, 0.05);
+}
+
+.timeline-glow-red {
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.4);
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+.timeline-glow-gray {
+  box-shadow: 0 0 15px rgba(107, 114, 128, 0.3);
+  border-color: rgba(107, 114, 128, 0.4);
+  background-color: rgba(107, 114, 128, 0.05);
+}
+
+/* Dark mode enhancements for timeline glows */
+.dark .timeline-glow-purple {
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+  background-color: rgba(168, 85, 247, 0.1);
+}
+
+.dark .timeline-glow-indigo {
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+  background-color: rgba(99, 102, 241, 0.1);
+}
+
+.dark .timeline-glow-cyan {
+  box-shadow: 0 0 20px rgba(34, 211, 238, 0.4);
+  background-color: rgba(34, 211, 238, 0.1);
+}
+
+.dark .timeline-glow-blue {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+.dark .timeline-glow-teal {
+  box-shadow: 0 0 20px rgba(20, 184, 166, 0.4);
+  background-color: rgba(20, 184, 166, 0.1);
+}
+
+.dark .timeline-glow-emerald {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+.dark .timeline-glow-green {
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+  background-color: rgba(34, 197, 94, 0.1);
+}
+
+.dark .timeline-glow-amber {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.4);
+  background-color: rgba(245, 158, 11, 0.1);
+}
+
+.dark .timeline-glow-orange {
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
+  background-color: rgba(249, 115, 22, 0.1);
+}
+
+.dark .timeline-glow-rose {
+  box-shadow: 0 0 20px rgba(244, 63, 94, 0.4);
+  background-color: rgba(244, 63, 94, 0.1);
+}
+
+.dark .timeline-glow-red {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+.dark .timeline-glow-gray {
+  box-shadow: 0 0 20px rgba(107, 114, 128, 0.4);
+  background-color: rgba(107, 114, 128, 0.1);
+}
+
+/* Timeline Vertical Line */
+.timeline-line::before {
+  content: '';
+  position: absolute;
+  /* left: 11px; original calculation based on w-6 */
+  left: 12px; /* Centered for w-6 (24px / 2 = 12px) icon */
+  top: 1.5rem; /* Start below the icon (h-6 = 1.5rem) */
+  bottom: -1.5rem; /* Extend below the element's bottom padding (pb-6 = 1.5rem), adjust if padding changes */
+  width: 2px;
+  background-color: hsl(var(--border)); /* Use CSS variable for border color */
+  z-index: 0;
+  /* Dashed style (optional, remove if solid is preferred) */
+  background-image: linear-gradient(to bottom, hsl(var(--border)) 60%, transparent 40%);
+  background-size: 2px 8px; /* Adjust size and gap of dashes */
+  background-repeat: repeat-y;
+}
+

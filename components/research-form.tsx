@@ -48,43 +48,6 @@ export function ResearchForm() {
                 />
                 <div className="absolute bottom-3 right-3 text-xs text-muted-foreground">{query.length} characters</div>
               </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-sm text-muted-foreground flex items-center gap-1.5">
-                    <Zap className="h-3.5 w-3.5 text-primary" />
-                    LLM Provider
-                  </label>
-                  <Select defaultValue="openrouter" disabled={isResearching}>
-                    <SelectTrigger className="bg-background/70 dark:bg-black/20 border-input text-foreground focus:ring-primary/20">
-                      <SelectValue placeholder="Select provider" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover border-border text-popover-foreground">
-                      <SelectItem value="openrouter">OpenRouter</SelectItem>
-                      <SelectItem value="google">Google</SelectItem>
-                      <SelectItem value="anthropic">Anthropic</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-sm text-muted-foreground flex items-center gap-1.5">
-                    <Search className="h-3.5 w-3.5 text-primary" />
-                    Max Search Tasks
-                  </label>
-                  <Select defaultValue="3" disabled={isResearching}>
-                    <SelectTrigger className="bg-background/70 dark:bg-black/20 border-input text-foreground focus:ring-primary/20">
-                      <SelectValue placeholder="Select max tasks" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-popover border-border text-popover-foreground">
-                      <SelectItem value="2">2</SelectItem>
-                      <SelectItem value="3">3</SelectItem>
-                      <SelectItem value="4">4</SelectItem>
-                      <SelectItem value="5">5</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
             </div>
           </CardContent>
           <CardFooter className="pt-2">

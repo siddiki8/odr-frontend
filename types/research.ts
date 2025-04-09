@@ -1,4 +1,58 @@
-import type { ResearchMessage, ResearchPlan, UsageStatistics } from "@/components/research-provider"
+// Remove the problematic import and re-export from research-provider
+// import type { ResearchMessage, ResearchPlan, UsageStatistics } from "@/components/research-provider"
+
+// --- Define Core Research Types Here ---
+
+// Message structure for the timeline/state
+export interface ResearchMessage {
+  step: string
+  status: string
+  message: string
+  details?: Record<string, any> | null
+}
+
+// Structure for individual report sections in the writing plan
+export interface WritingPlanSection {
+  title: string
+  guidance: string
+}
+
+// Structure for the overall writing plan
+export interface WritingPlan {
+  overall_goal: string
+  desired_tone: string
+  sections: WritingPlanSection[]
+  additional_directives?: string[]
+}
+
+// Structure for the research plan (combines writing plan and queries)
+export interface ResearchPlan {
+  writing_plan: WritingPlan
+  search_queries: string[]
+}
+
+// Structure for token usage per agent/step
+export interface TokenUsage {
+  prompt_tokens: number
+  completion_tokens: number
+  total_tokens: number
+}
+
+// Structure for estimated cost per agent/step
+export interface EstimatedCost {
+  [key: string]: number // e.g., planner: 0.0, summarizer: 0.0, total: 0.0
+}
+
+// Structure for overall usage statistics
+export interface UsageStatistics {
+  token_usage: { [key: string]: TokenUsage } // e.g., planner: TokenUsage, total: TokenUsage
+  estimated_cost: EstimatedCost
+  serper_queries_used: number
+  sources_processed_count: number
+  refinement_iterations_run: number
+}
+
+// --- Original Types Below (Keep These) ---
 
 // Type for saved reports in the research-service
 export interface SavedReport {
@@ -17,25 +71,52 @@ export interface SavedReport {
 }
 
 // Re-exporting common types for convenience - keep these
-export type { ResearchMessage, ResearchPlan, UsageStatistics, WritingPlan } from "@/components/research-provider"
+// export type { ResearchMessage, ResearchPlan, UsageStatistics, WritingPlan } from "@/components/research-provider" // REMOVE THIS LINE
 
 // Type for the data returned from the /research/result/{task_id} endpoint
 // This can also represent a COMPLETED task fetched from Firestore
 export interface TaskResultResponse {
   taskId: string
   query: string
-  status: "PENDING" | "PROCESSING" | "COMPLETE" | "ERROR" | "STOPPED" // Added STOPPED
+  status: "PENDING" | "PROCESSING" | "PLANNING_COMPLETE" | "PROCESSING_COMPLETE" | "COMPLETED" | "ERROR" | "CANCELLED"
   createdAt: string // Assuming ISO string format from Firestore Timestamp
-  updatedAt: string // Assuming ISO string format from Firestore Timestamp
+  startedAt?: string // Optional, when status changed to PROCESSING
+  updatedAt?: string // Assuming ISO string format from Firestore Timestamp
+  completedAt?: string // Present when task reached a final state
   llmProvider?: string
-  plan?: ResearchPlan | null // Keep optional plan at top level
-  result?: { // Present only if status is COMPLETE
-    finalReport: string
-    sources: SourceContextItem[] // Use a more specific type
-    usageStatistics: UsageStatistics
+  
+  // Plan details - added when status becomes PLANNING_COMPLETE
+  plan?: ResearchPlan | null
+  initialSearchTaskCount?: number // Number of searches planned initially
+  
+  // Sources - added when status becomes PROCESSING_COMPLETE
+  sources?: {
+    ref_num: number;
+    title: string;
+    link: string;
+    rank?: number;       // For sorting/display order
+    type?: "summary" | "chunk";  // More specific type definition
+    score?: number;      // Relevance score
+    content?: string;    // The actual text content from the source
+  }[]
+  sourceCount?: number
+  
+  // Final report and statistics - present when status is COMPLETED
+  report?: string
+  usageStatistics?: UsageStatistics
+  
+  // Error information
+  error?: string // Present if status is ERROR
+  stoppedReason?: string // Present if status is CANCELLED
+  
+  // Custom fields (not in Firestore, might be added client-side)
+  slug?: string
+  
+  // Legacy field for backward compatibility
+  result?: {
+    report: string,
+    usageStatistics?: UsageStatistics
   }
-  error?: string // Present only if status is ERROR or STOPPED
-  slug?: string // Optional: Can be added client-side if needed
 }
 
 // Specific type for a source item as stored in the result

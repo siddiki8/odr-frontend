@@ -12,8 +12,11 @@ export interface ResearchUpdateData {
 
 // Step: PLANNING, Status: END
 export interface PlanningEndDetails {
-  plan: ResearchPlan
-  // search_task_count is mentioned but might be derivable from plan.search_queries.length
+  plan: {
+    writing_plan: WritingPlan // The writing plan object
+    search_task_count: number // The count of initial queries
+    search_queries: string[] // Add back the search queries array
+  }
 }
 
 // Step: FINALIZING, Status: END
@@ -27,12 +30,12 @@ export interface CompleteEndDetails {
   usage: UsageStatistics
 }
 
-// Step: ERROR, Status: ERROR | FATAL
+// Step: ERROR, Status: FATAL / ERROR / VALIDATION_ERROR / etc.
 export interface ErrorDetails {
-  error_type?: string
-  error_id?: string
-  error?: string // From INITIALIZING/ERROR example
-  source_url?: string // From PROCESSING/ERROR example
+  error?: string // String representation of the error/exception
+  error_type?: string // e.g., AgentExecutionError, ValidationError
+  error_id?: string // Optional ID for correlation
+  // source_url is removed as it's specific to PROCESSING/WARNING now
 }
 
 // Step: INITIALIZING, Status: TASK_ID
@@ -43,7 +46,13 @@ export interface TaskIdDetails {
 // --- Type Guards (Optional but recommended) ---
 
 export function isPlanningEnd(data: ResearchUpdateData): data is ResearchUpdateData & { details: PlanningEndDetails } {
-  return data.step === "PLANNING" && data.status === "END" && data.details?.plan != null
+  return (
+    data.step === "PLANNING" &&
+    data.status === "END" &&
+    data.details?.plan?.writing_plan != null && // Check for the nested writing_plan
+    typeof data.details?.plan?.search_task_count === "number" &&
+    Array.isArray(data.details?.plan?.search_queries) // Add check for search_queries array
+  )
 }
 
 export function isFinalizingEnd(
@@ -62,12 +71,8 @@ export function isCompleteEnd(data: ResearchUpdateData): data is ResearchUpdateD
 }
 
 export function isErrorDetails(data: ResearchUpdateData): data is ResearchUpdateData & { details: ErrorDetails } {
-  return (
-    data.step === "ERROR" ||
-    (data.step === "INITIALIZING" && data.status === "ERROR") ||
-    (data.step === "PROCESSING" && data.status === "ERROR")
-    // Add other error conditions if necessary
-  )
+  // Simplify to just check if the step is ERROR, as per the new guide's structure
+  return data.step === "ERROR";
 }
 
 export function isTaskIdMessage(data: ResearchUpdateData): data is ResearchUpdateData & { details: TaskIdDetails } {

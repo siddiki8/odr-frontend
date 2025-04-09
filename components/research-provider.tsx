@@ -51,6 +51,7 @@ interface ResearchContextType {
   taskId: string | null
   clearTask: () => void
   isPollingForTaskResult: boolean
+  resetUIState: () => void
 }
 
 // Create context with default values
@@ -67,6 +68,7 @@ export const ResearchContext = createContext<ResearchContextType>({
   taskId: null,
   clearTask: () => {},
   isPollingForTaskResult: false,
+  resetUIState: () => {},
 })
 
 export function ResearchProvider({ children }: { children: ReactNode }) {
@@ -85,6 +87,18 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
   // --- WebSocket State ---
   const [socketUrl, setSocketUrl] = useState<string | null>(null);
   const initialMessageSentRef = useRef(false);
+
+  // --- Function to Reset UI State ---
+  const resetUIState = useCallback(() => {
+    console.log("Resetting UI state (messages, report, plan, stats, query).");
+    setMessages([]);
+    setReport(null);
+    setPlan(null);
+    setStats(null);
+    setCurrentQuery(null);
+    // Don't reset isResearching here, startResearch/stopResearch handle that
+    // Don't reset taskId here, clearTask handles that
+  }, []);
 
   // --- Function to Stop Polling ---
   const stopPolling = useCallback(() => {
@@ -148,8 +162,29 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
 
       // Handle specific steps/statuses based on websocket_guide.md
        if (isPlanningEnd(updateData)) {
-        console.log("Setting research plan:", updateData.details.plan)
-        setPlan(updateData.details.plan)
+         // The type guard now ensures all parts exist
+         const writingPlan = updateData.details.plan.writing_plan;
+         const searchQueries = updateData.details.plan.search_queries; // Extract queries
+         
+         console.log("Setting research plan from PLANNING/END message...");
+         
+         // Construct the ResearchPlan object for the state
+         const newPlanForState: ResearchPlan = {
+           writing_plan: writingPlan,
+           search_queries: searchQueries // Use the received queries
+         };
+
+         // Basic validation of the writingPlan structure
+         if (writingPlan && writingPlan.overall_goal && writingPlan.desired_tone && Array.isArray(writingPlan.sections)) {
+             setPlan(newPlanForState); // Set the constructed plan
+         } else {
+             console.warn("Received invalid writing_plan structure within PLANNING/END:", writingPlan);
+             // Set fallback plan state if writing plan is invalid
+             setPlan({
+                 writing_plan: { overall_goal: 'Error loading plan components', desired_tone: 'N/A', sections: [] },
+                 search_queries: searchQueries // Still keep the queries if writing plan failed
+             });
+         }
       } else if (isFinalizingEnd(updateData)) {
         console.log("Setting final report...")
         setReport(updateData.details.final_report)
@@ -247,17 +282,22 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
       console.log("Attempting to start research for query:", query);
       stopPolling();
       clearTask();
-    setMessages([])
-    setReport(null)
-    setPlan(null)
-    setStats(null)
-    setCurrentQuery(query)
+      resetUIState();
+    
+      // Re-add immediate state clearing for new research
+      setMessages([]) 
+      setReport(null)
+      setPlan(null)
+      setStats(null)
+      
+      // Set only what's necessary to start the new request
+      setCurrentQuery(query)
       setIsResearching(true)
       initialMessageSentRef.current = false;
 
       // Construct the full WebSocket URL
       const wsBaseUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || "ws://localhost:8000";
-      const wsPath = "/ws/research"; // Define the specific path
+      const wsPath = "/deep_research/ws/research"; // Updated WS path
       const fullWsUrl = `${wsBaseUrl}${wsPath}`;
       console.log("Setting socket URL to:", fullWsUrl);
       setSocketUrl(fullWsUrl);
@@ -268,7 +308,7 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
         initialMessageSentRef.current = true;
       }
     },
-    [sendJsonMessage, readyState, toast, clearTask, stopPolling]
+    [sendJsonMessage, readyState, toast, clearTask, stopPolling, resetUIState]
   );
 
   // --- stopResearch Function (Modified for HTTP request) ---
@@ -282,7 +322,7 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
     if (currentTaskId) {
       console.log(`Sending HTTP POST to stop task ${currentTaskId}`);
       try {
-        const response = await fetch(`${API_BASE_URL}/research/stop/${currentTaskId}`, {
+        const response = await fetch(`${API_BASE_URL}/deep_research/stop/${currentTaskId}`, { // Updated stop path
           method: "POST",
         });
         if (response.ok) {
@@ -304,6 +344,9 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
     console.log("Closing WebSocket connection and clearing client state.");
     setSocketUrl(null);
     initialMessageSentRef.current = false;
+    
+    // Reset UI state when stopping manually as well
+    resetUIState();
 
     // Add a client-side message only if HTTP stop failed or no task ID
     if (!httpStopSuccess) {
@@ -325,7 +368,7 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
         variant: httpStopSuccess ? "default" : "default",
     });
 
-  }, [taskId, readyState, toast, clearTask, stopPolling]);
+  }, [taskId, readyState, toast, clearTask, stopPolling, resetUIState]);
 
   // --- pollTaskStatus function ---
   const pollTaskStatus = useCallback(async () => {
@@ -338,14 +381,14 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
 
     console.log(`Polling status for Task ID: ${currentTaskId}`);
     try {
-      const response = await fetch(`${API_BASE_URL}/research/result/${currentTaskId}`);
+      const response = await fetch(`${API_BASE_URL}/deep_research/result/${currentTaskId}`); // Updated result path
 
       if (response.ok) {
         // Assumption: API returns TaskResultResponse & includes 'slug' on COMPLETE
         const data: TaskResultResponse & { slug?: string } = await response.json();
         console.log("Poll received task data:", data);
 
-        if (data.status === "COMPLETE") {
+        if (data.status === "COMPLETED" || data.status === "COMPLETE") {
           console.log("Polling found COMPLETE status.");
           stopPolling();
           localStorage.removeItem(LOCAL_STORAGE_TASK_ID_KEY);
@@ -355,9 +398,11 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
           } else {
             // Fallback if slug isn't provided (shouldn't happen ideally)
             toast({ title: "Research Complete", description: "Previous research finished. Please check the reports page.", duration: 5000 });
-             // Optionally update state to show completion message locally
+            // Optionally update state to show completion message locally
             setCurrentQuery(data.query);
-            setReport(data.result?.finalReport || null);
+            // Get report from either direct report property or nested result.report
+            const reportContent = data.report || (data.result && data.result.report);
+            setReport(reportContent || null);
             // Set plan/stats if needed
           }
         } else if (data.status === "ERROR") {
@@ -369,6 +414,15 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
               { step: "ERROR", status: "FATAL", message: data.error || "An unspecified error occurred previously." },
           ]);
           toast({ title: "Research Failed", description: data.error || "The previous research task encountered an error.", variant: "destructive" });
+        } else if (data.status === "STOPPED" || data.status === "CANCELLED") {
+          console.log(`Polling found ${data.status} status.`);
+          stopPolling();
+          localStorage.removeItem(LOCAL_STORAGE_TASK_ID_KEY);
+          setMessages([
+            { step: "POLLING", status: "INFO", message: `Previous research task (${data.taskId.substring(0, 8)}) was ${data.status.toLowerCase()}.` },
+          ]);
+          toast({ title: "Research Ended", description: `The previous research task was ${data.status.toLowerCase()}.`, variant: "default" });
+          // Keep isResearching false, as it should already be if we are polling
         } else {
           // PENDING or PROCESSING - continue polling
           console.log(`Task ${currentTaskId} is still ${data.status}. Continuing poll.`);
@@ -415,7 +469,7 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
     stopPolling(); // Ensure no old polling is running
 
     try {
-      const response = await fetch(`${API_BASE_URL}/research/result/${idToFetch}`);
+      const response = await fetch(`${API_BASE_URL}/deep_research/result/${idToFetch}`); // Updated result path
 
       if (response.ok) {
         const data: TaskResultResponse = await response.json();
@@ -424,26 +478,42 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
         setCurrentQuery(data.query);
         setTaskId(data.taskId); // Ensure taskId state matches fetched task
 
-        if (data.status === "COMPLETE" && data.result) {
-          setReport(data.result.finalReport);
-          const fetchedPlan = (data as any).plan || {}; 
-          setPlan({
-             writing_plan: fetchedPlan.writing_plan || {overall_goal:'N/A', desired_tone:'N/A', sections:[]},
-             search_queries: fetchedPlan.search_queries || []
-           });
-          setStats({
-            final_report_length: data.result.finalReport.length,
-            usage: data.result.usageStatistics,
-          });
-          setMessages([
-              { step: "INITIALIZING", status: "SUCCESS", message: `Loaded completed research for query: ${data.query}` },
-              { step: "COMPLETE", status: "END", message: "Research process was previously completed." },
-          ]);
-          setIsResearching(false);
-          toast({ title: "Research Loaded", description: "Successfully loaded previous research results." });
-          localStorage.removeItem(LOCAL_STORAGE_TASK_ID_KEY);
-          console.log("Cleared task ID from localStorage (Fetch COMPLETE).");
-
+        if (data.status === "COMPLETED" || data.status === "COMPLETE") {
+          // Get report from either direct report property or nested result.report
+          const reportContent = data.report || (data.result && data.result.report);
+          // Get usage statistics from either direct property or nested result
+          const usageStats = data.usageStatistics || (data.result && data.result.usageStatistics);
+          
+          if (reportContent) {
+            setReport(reportContent);
+            
+            // Ensure the plan object conforms to ResearchPlan type
+            const fetchedPlan = data.plan; 
+            if (fetchedPlan && fetchedPlan.writing_plan && Array.isArray(fetchedPlan.search_queries)) {
+              setPlan(fetchedPlan);
+            } else {
+              console.warn("Fetched task has invalid or missing plan structure:", fetchedPlan);
+              setPlan({
+                  writing_plan: { overall_goal: 'Plan not found or invalid', desired_tone: 'N/A', sections: [] },
+                  search_queries: []
+              });
+            }
+            
+            setStats({
+              final_report_length: reportContent.length,
+              usage: usageStats,
+            });
+            
+            setMessages([
+                { step: "INITIALIZING", status: "SUCCESS", message: `Loaded completed research for query: ${data.query}` },
+                { step: "COMPLETE", status: "END", message: "Research process was previously completed." },
+            ]);
+            
+            setIsResearching(false);
+            toast({ title: "Research Loaded", description: "Successfully loaded previous research results." });
+            localStorage.removeItem(LOCAL_STORAGE_TASK_ID_KEY);
+            console.log("Cleared task ID from localStorage (Fetch COMPLETE).");
+          }
         } else if (data.status === "ERROR") {
           setMessages([
               { step: "INITIALIZING", status: "ERROR", message: `Previous research task (${data.taskId.substring(0, 8)}) failed.` },
@@ -454,6 +524,14 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
           localStorage.removeItem(LOCAL_STORAGE_TASK_ID_KEY);
           console.log("Cleared task ID from localStorage (Fetch ERROR).");
 
+        } else if (data.status === "STOPPED" || data.status === "CANCELLED") {
+          setMessages([
+            { step: "INITIALIZING", status: "INFO", message: `Previous research task (${data.taskId.substring(0, 8)}) was ${data.status.toLowerCase()}.` },
+          ]);
+          setIsResearching(false);
+          toast({ title: "Research Ended", description: `Previous research task was ${data.status.toLowerCase()}.`, variant: "default" });
+          localStorage.removeItem(LOCAL_STORAGE_TASK_ID_KEY);
+          console.log(`Cleared task ID from localStorage (Fetch ${data.status}).`);
         } else { // PENDING or PROCESSING - Start Polling!
           console.log(`Task ${idToFetch} is ${data.status}. Starting polling.`);
           setIsPollingForTaskResult(true);
@@ -526,7 +604,8 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
         stopResearch,
         taskId,
         clearTask,
-        isPollingForTaskResult
+        isPollingForTaskResult,
+        resetUIState,
   }
 
   return <ResearchContext.Provider value={contextValue}>{children}</ResearchContext.Provider>

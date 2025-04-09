@@ -26,7 +26,6 @@ const CATEGORIES = {
   ERROR: "Error",
   CONNECTION: "Connection Status",
   CONTROL: "Control",
-  POLLING: "Polling Status", // Add POLLING category
 } as const;
 
 type CategoryKey = keyof typeof CATEGORIES;
@@ -39,8 +38,8 @@ const stepToCategoryKey = (step: string): CategoryKey => {
     case "PLANNING": return "PLANNING";
     case "SEARCHING": return "SEARCHING";
     case "RANKING": return "RANKING";
+    case "SCRAPING": return "BUILDING_CONTEXT";
     case "PROCESSING": return "BUILDING_CONTEXT";
-    case "FILTERING": return "BUILDING_CONTEXT";
     case "WRITING": return "WRITING";
     case "REFINING": return "REFINING";
     case "FINALIZING": return "FINALIZING";
@@ -49,10 +48,37 @@ const stepToCategoryKey = (step: string): CategoryKey => {
     case "ERROR": return "ERROR";
     case "CONNECTION": return "CONNECTION";
     case "CONTROL": return "CONTROL";
-    case "POLLING": return "POLLING"; // Map POLLING step
     default: return "ERROR";
   }
 };
+
+// Helper to generate a more descriptive sub-task display ID
+const getSubTaskDisplayId = (message: { step: string; status: string; details?: Record<string, any> | null }): string => {
+    const step = message.step;
+    const status = message.status;
+    const iteration = message.details?.iteration;
+
+    if (step === "PLANNING") return status === 'END' ? "Plan Generated" : "Planning...";
+    if (step === "SEARCHING") {
+        if (iteration) return `Refinement Search (Iter ${iteration})`;
+        return status === 'END' ? "Initial Search Complete" : "Initial Searching...";
+    }
+    if (step === "RANKING") return status === 'END' ? "Results Ranked" : "Ranking Results...";
+    if (step === "WRITING") return status === 'END' ? "Draft Written" : "Writing Draft...";
+    if (step === "REFINING") {
+        if (status === 'END' || status === 'INFO') return `Refinement Loop Ended (Iter ${iteration})`;
+        if (status === 'START' || status === 'IN_PROGRESS') return `Refining (Iter ${iteration})`;
+        return `Refining (Iter ${iteration || 'N/A'})`; // Fallback
+    }
+    if (step === "FINALIZING") return status === 'END' ? "Report Finalized" : "Finalizing Report...";
+    if (step === "INITIALIZING" && status === "TASK_ID") return "Task ID Received";
+    if (step === "STARTING") return "Research Started";
+    if (step === "COMPLETE") return "Research Complete";
+    if (step === "ERROR") return `Error (${status})`;
+
+    // Fallback for less common steps/statuses or context building
+    return step;
+}
 
 // Define a type for individual messages within a group (raw update)
 interface GroupUpdate {
@@ -71,6 +97,7 @@ interface SubTask {
     latestStatus: string;
     latestMessage: string;
     isRefinement: boolean; // Does this sub-task belong to refinement?
+    hasWarning: boolean; // Added flag for warnings
     updates: GroupUpdate[]; // Keep raw updates if needed for history within sub-task
 }
 
@@ -101,11 +128,12 @@ export function ResearchTimeline() {
 
     messages.forEach((message, messageIndex) => {
       const categoryKey = stepToCategoryKey(message.step)
-      // Don't skip POLLING messages anymore
-      // if (categoryKey === "CONTROL") return;
+      // Don't process CONTROL messages visually in the timeline
+      if (categoryKey === "CONTROL") return;
 
       const categoryName = CATEGORIES[categoryKey]
-      const isRefinement = message.message.includes("[Refinement") || message.step === "REFINING" // Simple check for now
+      // Updated refinement check: step is REFINING or details contain an iteration number
+      const isRefinement = message.step === "REFINING" || (message.details && typeof message.details.iteration === 'number');
       const currentTimestamp = timestampCounter++
 
       const update: GroupUpdate = {
@@ -116,27 +144,22 @@ export function ResearchTimeline() {
         timestamp: currentTimestamp
       }
 
-      // --- Sub-task Identification --- 
+      // --- Sub-task Identification ---
       let subTaskId: string;
       let subTaskDisplayId: string;
-      // Try using source_url for PROCESSING steps
-      if (message.step === "PROCESSING" && message.details?.source_url) {
+      // Use source_url for PROCESSING steps within BUILDING_CONTEXT category
+      if (categoryKey === "BUILDING_CONTEXT" && message.details?.source_url) {
           subTaskId = message.details.source_url;
           try {
-              // Attempt to create a shorter display ID (hostname)
               subTaskDisplayId = new URL(subTaskId).hostname.replace(/^www\./, '');
-          } catch { 
-              subTaskDisplayId = subTaskId; // Fallback to full URL if parsing fails
+          } catch {
+              subTaskDisplayId = subTaskId; // Fallback
           }
-      // Treat POLLING as its own subtask for now
-      } else if (message.step === "POLLING") {
-          subTaskId = `${categoryName}::${message.step}`;
-          subTaskDisplayId = "Status Check";
+      // Group most other steps by category + step name as the unique ID
+      // But use the helper function for a nicer display name
       } else {
-          // Fallback: Use category name + message step as a simple subtask identifier within the category
-          // This might group START/END of the same category step together
-          subTaskId = `${categoryName}::${message.step}`;
-          subTaskDisplayId = message.step; // Display the step name
+          subTaskId = `${categoryName}::${message.step}`; // Group by step within category
+          subTaskDisplayId = getSubTaskDisplayId(message); // Use helper for display
       }
       // --- End Sub-task Identification ---
 
@@ -174,6 +197,7 @@ export function ResearchTimeline() {
               latestStatus: message.status,
               latestMessage: message.message,
               isRefinement: isRefinement, // Mark if subtask relates to refinement
+              hasWarning: message.status === "WARNING", // Initialize warning flag
               updates: [update]
           }
           categoryGroup.subTasks.push(subTask)
@@ -184,6 +208,8 @@ export function ResearchTimeline() {
           subTask.latestMessage = message.message
           // If any update within the subtask is refinement, mark the whole subtask as refinement
           if (isRefinement) subTask.isRefinement = true
+          // If any update is a warning, mark the subtask
+          if (message.status === "WARNING") subTask.hasWarning = true
       }
     })
 
@@ -198,9 +224,6 @@ export function ResearchTimeline() {
 
     // Sort groups primarily by first appearance timestamp, keeping STARTING/CONNECTION first and COMPLETE last
     groupedArray.sort((a, b) => {
-      // Add POLLING to the top group if present
-      if (a.categoryKey === "POLLING") return -1;
-      if (b.categoryKey === "POLLING") return 1;
       if (a.categoryKey === "STARTING" || a.categoryKey === "CONNECTION") return -1
       if (b.categoryKey === "STARTING" || b.categoryKey === "CONNECTION") return 1
       if (a.categoryKey === "COMPLETE") return 1
@@ -346,7 +369,6 @@ export function ResearchTimeline() {
       case "ERROR": return "timeline-glow-red";
       case "CONNECTION": return "timeline-glow-gray";
       case "CONTROL": return "";
-      case "POLLING": return "timeline-glow-gray"; // Add POLLING glow
       default: return "";
     }
   }
@@ -365,8 +387,8 @@ export function ResearchTimeline() {
 
     const currentCategoryKey = categoryGroups[activeIndex].categoryKey
 
-    // Don't show next step if polling or terminal
-    if (currentCategoryKey === 'POLLING' || currentCategoryKey === 'COMPLETE' || currentCategoryKey === 'ERROR') return null;
+    // Don't show next step if terminal
+    if (currentCategoryKey === 'COMPLETE' || currentCategoryKey === 'ERROR') return null;
 
     // Define the typical sequence of category keys
     const categorySequence: CategoryKey[] = [
@@ -411,7 +433,6 @@ export function ResearchTimeline() {
       case "ERROR": return <AlertCircle className="h-5 w-5 text-red-500" />;
       case "CONNECTION": return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
       case "CONTROL": return <Square className="h-5 w-5 text-muted-foreground" />;
-      case "POLLING": return <Clock className="h-5 w-5 text-blue-500" />; // Add POLLING icon
       default: return <MoreHorizontal className="h-5 w-5" />;
     }
   }
@@ -506,8 +527,13 @@ export function ResearchTimeline() {
 
                       {/* Latest Message / Summary - MODIFIED */}
                       <p className="text-sm text-muted-foreground mb-3 break-words min-h-[20px]"> {/* Added min-height */}
-                         {/* Render specific active task info OR the default latest message */} 
-                         {activeBuildingContextDisplay !== null ? activeBuildingContextDisplay : group.latestMessage}
+                         {/* If the step ended, show the final message. Otherwise show active task or latest message. */}
+                         {group.latestStatus === 'END'
+                           ? group.latestMessage // Show the message associated with the END status
+                           : activeBuildingContextDisplay !== null 
+                             ? activeBuildingContextDisplay // Show active sub-task if one exists and step hasn't ended
+                             : group.latestMessage // Otherwise, show the latest message received
+                         }
                       </p>
 
                       {/* MODIFIED: Expandable Details Section for Sub-Tasks */} 
@@ -539,16 +565,27 @@ export function ResearchTimeline() {
                                   <div className="flex-1 min-w-0">
                                     {/* Sub-task Header: Identifier + Latest Status */}
                                     <div className="flex justify-between items-center mb-1">
-                                      <span 
-                                        title={subTask.id} // Full ID on hover
-                                        className="font-medium text-muted-foreground truncate pr-2"
-                                      >
-                                        {subTask.displayId}
-                                      </span>
-                                      <Badge variant="outline" className={`${getStatusColor(subTask.latestStatus)} text-[10px] px-1.5 py-0 leading-tight`}>
-                                        {getStatusIcon(subTask.latestStatus)} 
-                                        <span className="ml-1">{subTask.latestStatus}</span>
-                                    </Badge>
+                                      <div className="flex items-center space-x-2 text-sm font-medium mb-1">
+                                        <span className={cn(
+                                          "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                                          getStatusColor(subTask.latestStatus)
+                                        )}>
+                                          {subTask.latestStatus}
+                                        </span>
+                                        {subTask.hasWarning && (
+                                          <TooltipProvider delayDuration={100}>
+                                            <Tooltip>
+                                              <TooltipTrigger>
+                                                <AlertTriangle className="h-4 w-4 text-yellow-500" />
+                                              </TooltipTrigger>
+                                              <TooltipContent>
+                                                <p>This step encountered a non-critical issue.</p>
+                                              </TooltipContent>
+                                            </Tooltip>
+                                          </TooltipProvider>
+                                        )}
+                                        <span className="text-muted-foreground truncate" title={subTask.id}>{subTask.displayId}</span>
+                                      </div>
                                     </div>
                                     {/* Sub-task Latest Message */}
                                     <p className="text-muted-foreground/80 break-words">

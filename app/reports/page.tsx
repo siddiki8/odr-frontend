@@ -32,9 +32,9 @@ export default function ReportsPage() {
   }, [])
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-[1600px]">
+    <div className="container mx-auto px-4 pt-16 pb-12 max-w-[1600px]">
       <motion.div
-        className="mb-12 text-center"
+        className="mb-12 text-center pt-12"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}

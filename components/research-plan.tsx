@@ -3,16 +3,43 @@
 import { useResearch } from "@/hooks/use-research"
 import { Card, CardContent } from "@/components/ui/card"
 import { motion } from "framer-motion"
-import { Search, Lightbulb, List, Target, MessageSquare } from "lucide-react"
+import { Search, Lightbulb, List, Target, MessageSquare, Flag } from "lucide-react"
+import type { ResearchPlan as ResearchPlanType } from "@/types/research"
+import type { WritingPlanSection } from "@/types/research"
 
-export function ResearchPlan() {
-  const { plan } = useResearch()
+// Define props for the component
+interface ResearchPlanDisplayProps {
+  plan?: ResearchPlanType | null // Allow passing an optional plan
+}
 
-  if (!plan) {
+export function ResearchPlanDisplay({ plan: planProp }: ResearchPlanDisplayProps) {
+  // Use the hook only if no plan is passed via props
+  const { plan: planFromHook } = useResearch()
+
+  // Determine which plan to use: prioritize the prop
+  const planToDisplay = planProp !== undefined ? planProp : planFromHook
+
+  const typedPlan = planToDisplay as ResearchPlanType | null;
+
+  if (!typedPlan) {
     return null
   }
 
-  const { writing_plan, search_queries } = plan
+  const { writing_plan, search_queries } = typedPlan
+
+  // --- Add Defensive Check --- 
+  if (!writing_plan) {
+    // Handle the case where writing_plan itself is missing within the plan object
+    console.warn("ResearchPlanDisplay received plan object without writing_plan.", typedPlan);
+    return (
+      <Card className="bg-card/80 backdrop-blur-sm border-border shadow-lg overflow-hidden dark:bg-[#111921]/90">
+        <CardContent className="p-6 text-center text-muted-foreground">
+          Plan details are missing or incomplete.
+        </CardContent>
+      </Card>
+    );
+  }
+  // --- End Check ---
 
   // Animation variants
   const container = {
@@ -45,7 +72,7 @@ export function ResearchPlan() {
           initial="hidden"
           animate="show"
         >
-          {/* Research Goal */}
+          {/* Research Goal (Original) */}
           <motion.div variants={item} className="bg-background/30 dark:bg-black/20 rounded-lg p-4 border border-border">
             <div className="flex gap-3 mb-4">
               <div className="bg-primary/10 p-2 rounded-lg flex-shrink-0">
@@ -58,7 +85,7 @@ export function ResearchPlan() {
             </div>
           </motion.div>
 
-          {/* Desired Tone */}
+          {/* Desired Tone (Original) */}
           <motion.div variants={item} className="bg-background/30 dark:bg-black/20 rounded-lg p-4 border border-border">
             <div className="flex gap-3 mb-4">
               <div className="bg-primary/10 p-2 rounded-lg flex-shrink-0">
@@ -70,7 +97,7 @@ export function ResearchPlan() {
               <p className="text-foreground break-words">{writing_plan.desired_tone}</p>
             </div>
           </motion.div>
-
+          
           {/* Search Queries */}
           <motion.div variants={item} className="bg-background/30 dark:bg-black/20 rounded-lg p-4 border border-border">
             <div className="flex gap-3 mb-4">
@@ -102,7 +129,7 @@ export function ResearchPlan() {
               <h3 className="text-lg font-medium text-card-foreground pt-1">Report Sections</h3>
             </div>
             <div className="ml-11 space-y-4">
-              {writing_plan.sections.map((section: { title: string; guidance: string }, index: number) => (
+              {writing_plan.sections.map((section: WritingPlanSection, index: number) => (
                 <motion.div
                   key={index}
                   className="bg-muted/60 dark:bg-black/30 p-4 rounded-lg border border-border"
@@ -117,7 +144,7 @@ export function ResearchPlan() {
             </div>
           </motion.div>
 
-          {/* Additional Directives */}
+          {/* Additional Directives (Original) */}
           {writing_plan.additional_directives && writing_plan.additional_directives.length > 0 && (
             <motion.div variants={item} className="bg-background/30 dark:bg-black/20 rounded-lg p-4 border border-border">
               <div className="flex gap-3 mb-4">

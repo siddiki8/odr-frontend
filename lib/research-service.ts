@@ -1,7 +1,7 @@
 import { db } from "@/lib/firebase"
 import { collection, doc, getDoc, getDocs, query, orderBy, limit, where, Timestamp } from "firebase/firestore"
 import type { Firestore } from "firebase/firestore"
-import type { TaskResultResponse, ReportListItem } from "@/types/research"
+import type { TaskResultResponse, ReportListItem, WritingPlan } from "@/types/research"
 
 // Define the collection name used by the backend
 const TASKS_COLLECTION = "research_tasks"
@@ -41,30 +41,69 @@ export async function getResearchReportById(id: string): Promise<TaskResultRespo
       return null
     }
 
-    const data = docSnap.data() as TaskResultResponse; // Assume basic type
-    const convertedData = convertTimestamps(data); // Convert timestamps
+    const data = docSnap.data() // No strict typing here initially
+    if (!data) {
+      console.log(`No data found for task ID: ${id}`);
+      return null;
+    }
+    const convertedData = convertTimestamps(data) as any; // Convert timestamps, cast to any for flexible access
 
-    // Validate updatedAt after conversion
+    // --- Mapping Firestore structure to Frontend Type --- 
+    // Check for the nested structure: topLevelWritingPlan.writing_plan
+    const topLevelWritingPlan = convertedData.writingPlan;
+    if (topLevelWritingPlan && topLevelWritingPlan.writing_plan && !convertedData.plan) {
+        console.log(`Mapping Firestore nested writingPlan to frontend plan structure for task: ${id}`);
+        
+        // Extract the actual writing plan details
+        const actualWritingPlan: WritingPlan = topLevelWritingPlan.writing_plan;
+        
+        // Extract search queries from search_tasks
+        const searchQueries: string[] = (topLevelWritingPlan.search_tasks || [])
+            .map((task: any) => task.query) // Extract the query string
+            .filter((query: string | undefined) => typeof query === 'string'); // Ensure it's a string
+
+        // Construct the 'plan' object expected by the frontend
+        convertedData.plan = {
+            writing_plan: actualWritingPlan,
+            search_queries: searchQueries
+        };
+        
+        // Clean up the original structure (optional)
+        // delete convertedData.writingPlan; 
+    } else {
+      // Handle cases where the structure might be different or plan is already set
+      console.warn(`Could not map Firestore plan structure for task ${id}. Expected 'writingPlan.writing_plan'. Found:`, topLevelWritingPlan);
+      // Ensure plan is at least null if mapping fails but was expected
+      if (!convertedData.plan) {
+        convertedData.plan = null;
+      }
+    }
+    // --- End Mapping ---
+
+    // Cast back to the expected type before further validation
+    const finalData = convertedData as TaskResultResponse;
+
+    // Validate updatedAt after conversion and potential mapping
     let validUpdatedAt = '1970-01-01T00:00:00.000Z'; // Default fallback date
-    if (typeof convertedData.updatedAt === 'string') {
-      const dateCheck = new Date(convertedData.updatedAt);
+    if (typeof finalData.updatedAt === 'string') {
+      const dateCheck = new Date(finalData.updatedAt);
       if (!isNaN(dateCheck.getTime())) {
-        validUpdatedAt = convertedData.updatedAt;
+        validUpdatedAt = finalData.updatedAt;
       } else {
-        console.warn(`Invalid updatedAt date string found for task ${id}: ${convertedData.updatedAt}. Using default.`);
+        console.warn(`Invalid updatedAt date string found for task ${id}: ${finalData.updatedAt}. Using default.`);
       }
     } else {
        console.warn(`Missing or non-string updatedAt for task ${id}. Using default.`);
     }
-    convertedData.updatedAt = validUpdatedAt; // Overwrite with validated or default date
+    finalData.updatedAt = validUpdatedAt; // Overwrite with validated or default date
 
     // Optionally, ensure it's complete before returning, or let the component handle status
-    // if (convertedData.status !== 'COMPLETE') {
-    //    console.log(`Task ${id} found but status is ${convertedData.status}`);
+    // if (finalData.status !== 'COMPLETE') {
+    //    console.log(`Task ${id} found but status is ${finalData.status}`);
     //    return null; // Or return the data and let caller decide
     // }
 
-    return convertedData;
+    return finalData; // Return the potentially modified object
   } catch (error) {
     console.error(`Error fetching task ${id}:`, error);
     return null;
@@ -84,7 +123,7 @@ export async function getAllResearchReports(): Promise<ReportListItem[]> {
     // Query for completed tasks, order by creation date descending
     const q = query(
       tasksRef,
-      where("status", "==", "COMPLETE"),
+      where("status", "==", "COMPLETED"),
       orderBy("createdAt", "desc")
     );
     const querySnapshot = await getDocs(q)

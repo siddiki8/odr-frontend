@@ -1,4 +1,6 @@
 "use client"
+import React from "react"
+
 
 // Import the new header component
 import { Header } from "@/components/Header"

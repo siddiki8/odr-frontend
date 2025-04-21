@@ -3,7 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Github, MonitorPlay } from "lucide-react"
+import { Github, MonitorPlay, LayoutGrid, Scaling, FileText } from "lucide-react"
 
 export function Header() {
   return (
@@ -31,7 +31,23 @@ export function Header() {
         </Link>
 
         {/* Right Side: Navigation Links */}
-        <nav className="flex items-center gap-3">
+        <nav className="flex items-center gap-1 sm:gap-2 md:gap-3">
+          <Button variant="ghost" size="sm" asChild className="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+            <Link href="/potential-agents">
+              <LayoutGrid className="mr-1.5 h-4 w-4" /> Agents
+            </Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild className="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+            <Link href="/comparison">
+              <Scaling className="mr-1.5 h-4 w-4" /> Compare
+            </Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild className="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+            <Link href="/reports">
+              <FileText className="mr-1.5 h-4 w-4" /> Reports
+            </Link>
+          </Button>
+          <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-1"></div> {/* Separator */}
           <Button variant="ghost" size="sm" asChild className="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
             <Link href="/deep_research">
               <MonitorPlay className="mr-1.5 h-4 w-4" /> Demo

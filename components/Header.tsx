@@ -49,7 +49,7 @@ export function Header() {
           </Button>
           <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-1"></div> {/* Separator */}
           <Button variant="ghost" size="sm" asChild className="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
-            <Link href="/deep_research">
+            <Link href="/demo">
               <MonitorPlay className="mr-1.5 h-4 w-4" /> Demo
             </Link>
           </Button>

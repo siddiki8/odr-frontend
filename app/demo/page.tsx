@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ const reports = [
   },
 ];
 
-export default function DemoPage() {
+function DemoContent() {
   const searchParams = useSearchParams();
   const showLiveDemo =
     searchParams.get("live") === "1" || process.env.NEXT_PUBLIC_SHOW_DEMO_LINK === "true";
@@ -42,7 +42,7 @@ export default function DemoPage() {
             New Research Agent Interfaces In Progress
           </h1>
           <p className="text-lg md:text-xl text-gray-700 dark:text-gray-300 leading-relaxed">
-            Were building polished, specialized interfaces for multiple research agencies powered by
+            We’re building polished, specialized interfaces for multiple research agencies powered by
             the ODR-API. In the meantime, explore completed reports and our framework.
           </p>
 
@@ -102,5 +102,30 @@ export default function DemoPage() {
         </div>
       </div>
     </section>
+  );
+}
+
+export default function DemoPage() {
+  return (
+    <Suspense
+      fallback={
+        <section className="relative min-h-[60vh] pt-28 pb-24">
+          <div className="container mx-auto px-4">
+            <div className="max-w-3xl mx-auto text-center">
+              <div className="h-5 w-40 mx-auto mb-4 rounded-full bg-gray-200 dark:bg-gray-800 animate-pulse" />
+              <div className="h-9 w-2/3 mx-auto mb-3 rounded-md bg-gray-200 dark:bg-gray-800 animate-pulse" />
+              <div className="h-5 w-1/2 mx-auto mb-10 rounded-md bg-gray-200 dark:bg-gray-800 animate-pulse" />
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {[0,1,2].map((i) => (
+                  <div key={i} className="h-32 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-100/60 dark:bg-gray-900/40 animate-pulse" />
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      }
+    >
+      <DemoContent />
+    </Suspense>
   );
 }

@@ -325,60 +325,33 @@ export function ResearchTimeline() {
     }
   }
 
-  // Status color mapping
+  // Nothing design: monochrome status colors with accent red for errors
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "ACTIVE": // Used by POLLING
-        return "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700";
-      case "START":
-        return "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700"
       case "END":
-        return "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/40 dark:text-green-300 dark:border-green-700"
       case "SUCCESS":
-        return "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/40 dark:text-green-300 dark:border-green-700"
+        return "border-[var(--nd-success)] text-[var(--nd-success)] bg-transparent"
       case "ERROR":
-        return "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/40 dark:text-red-300 dark:border-red-700"
       case "FATAL":
-        return "bg-red-100 text-red-800 border-red-300 dark:bg-red-900/40 dark:text-red-300 dark:border-red-700"
+        return "border-[var(--nd-accent)] text-[var(--nd-accent)] bg-transparent"
       case "WARNING":
-        return "bg-yellow-100 text-yellow-800 border-yellow-300 dark:bg-yellow-900/40 dark:text-yellow-300 dark:border-yellow-700"
-      case "INFO":
-        return "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700"
+        return "border-[var(--nd-warning)] text-[var(--nd-warning)] bg-transparent"
       case "IN_PROGRESS":
-        return "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-700"
-      case "STOPPED":
-        return "bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-800/40 dark:text-gray-300 dark:border-gray-700";
+      case "ACTIVE":
+      case "START":
+      case "INFO":
+        return "border-[var(--nd-border-visible)] text-[var(--nd-text-secondary)] bg-transparent"
       default:
-        return "bg-gray-100 text-gray-800 border-gray-300 dark:bg-gray-800/40 dark:text-gray-300 dark:border-gray-700"
+        return "border-[var(--nd-border)] text-[var(--nd-text-disabled)] bg-transparent"
     }
   }
 
-  // Get glow color class based on category key
-  const getGlowClass = (categoryKey: CategoryKey): string => {
-    switch (categoryKey) {
-      case "INITIALIZING": return "timeline-glow-purple";
-      case "PLANNING": return "timeline-glow-cyan";
-      case "SEARCHING": return "timeline-glow-blue";
-      case "RANKING": return "timeline-glow-teal";
-      case "BUILDING_CONTEXT": return "timeline-glow-emerald";
-      case "WRITING": return "timeline-glow-amber";
-      case "REFINING": return "timeline-glow-orange";
-      case "FINALIZING": return "timeline-glow-rose";
-      case "STARTING": return "timeline-glow-indigo";
-      case "COMPLETE": return "timeline-glow-green";
-      case "ERROR": return "timeline-glow-red";
-      case "CONNECTION": return "timeline-glow-gray";
-      case "CONTROL": return "";
-      default: return "";
-    }
-  }
+  // Nothing design: no glow classes — use left accent border on active items
+  const getGlowClass = (_categoryKey: CategoryKey): string => ""
 
-  // Step color mapping - adapt to categories or remove if not used for main display
-  const getCategoryColorClasses = (categoryKey: CategoryKey, isErrorState: boolean) => {
-    if (isErrorState) return "border-red-500/50 dark:border-red-500/40 bg-red-50 dark:bg-red-900/10";
-    // Use the glow class for background/border nuances if active, otherwise default
-    // We'll apply the main glow via conditional class application below
-    return "border-border bg-background/80"; // Default appearance
+  const getCategoryColorClasses = (_categoryKey: CategoryKey, isErrorState: boolean) => {
+    if (isErrorState) return "border-[var(--nd-accent)] bg-[var(--nd-surface)]"
+    return "border-[var(--nd-border)] bg-[var(--nd-surface)]"
   }
 
   // Get the next step based on the current active step
@@ -440,7 +413,7 @@ export function ResearchTimeline() {
   return (
     <div className="h-full">
       <TooltipProvider delayDuration={150}>
-        <h3 className="text-lg font-medium text-card-foreground mb-3">Timeline</h3>
+        <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--nd-text-secondary)] mb-4">TIMELINE</p>
         <ScrollArea className="h-[500px] pr-4 relative" ref={scrollAreaRef}>
           <AnimatePresence initial={false}>
               {categoryGroups.map((group, index) => {
@@ -491,55 +464,52 @@ export function ResearchTimeline() {
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.3, ease: "easeOut" }}
                   >
-                    {/* Category Node (Icon) */}
+                    {/* Category Node (dot) */}
                     <div className={cn(
-                      "mt-1 flex-shrink-0 h-6 w-6 rounded-full border-2 flex items-center justify-center z-10",
-                      "mx-1",
-                      getCategoryColorClasses(group.categoryKey, group.isErrorState),
-                      isActive && "active-node" 
-                    )}>
-                        <Tooltip>
-                        <TooltipTrigger asChild>
-                          {getCategoryIcon(group.categoryKey)}
-                          </TooltipTrigger>
-                        <TooltipContent side="right" sideOffset={5}>
-                          <p>{group.categoryName}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                    </div>
+                      "mt-1.5 flex-shrink-0 h-3 w-3 rounded-full border z-10 mx-1",
+                      group.isErrorState
+                        ? "bg-[var(--nd-accent)] border-[var(--nd-accent)]"
+                        : group.latestStatus === "END" || group.latestStatus === "SUCCESS"
+                        ? "bg-[var(--nd-success)] border-[var(--nd-success)]"
+                        : isActive
+                        ? "bg-[var(--nd-accent)] border-[var(--nd-accent)]"
+                        : "bg-transparent border-[var(--nd-border-visible)]"
+                    )} />
 
                     {/* Category Content Box */}
                     <div className={cn(
-                      "flex-1 min-w-0 p-4 rounded-lg border shadow-sm overflow-hidden",
-                      getCategoryColorClasses(group.categoryKey, group.isErrorState),
-                      isActive && getGlowClass(group.categoryKey) 
+                      "flex-1 min-w-0 p-4 rounded-lg border overflow-hidden",
+                      isActive
+                        ? "border-l-2 border-l-[var(--nd-accent)] border-[var(--nd-border)] bg-[var(--nd-surface)]"
+                        : getCategoryColorClasses(group.categoryKey, group.isErrorState)
                     )}>
                       {/* Category Header */}
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-foreground flex items-center">
+                        <p className="font-mono text-[11px] uppercase tracking-[0.06em] text-[var(--nd-text-secondary)]">
                           {group.categoryName}
-                        </h4>
-                        <Badge variant="outline" className={`${getStatusColor(group.latestStatus)} font-mono text-xs`}>
-                          {getStatusIcon(group.latestStatus, group.isErrorState)} 
-                          <span className="ml-1.5">{group.latestStatus}</span>
-                        </Badge>
+                        </p>
+                        <span className={cn(
+                          "font-mono text-[10px] uppercase tracking-[0.06em] px-2 py-0.5 border rounded",
+                          getStatusColor(group.latestStatus)
+                        )}>
+                          {group.latestStatus}
+                        </span>
                       </div>
 
-                      {/* Latest Message / Summary - MODIFIED */}
-                      <p className="text-sm text-muted-foreground mb-3 break-words min-h-[20px]"> {/* Added min-height */}
-                         {/* If the step ended, show the final message. Otherwise show active task or latest message. */}
+                      {/* Latest Message */}
+                      <p className="font-grotesk text-sm text-[var(--nd-text-secondary)] mb-3 break-words min-h-[20px]">
                          {group.latestStatus === 'END'
-                           ? group.latestMessage // Show the message associated with the END status
-                           : activeBuildingContextDisplay !== null 
-                             ? activeBuildingContextDisplay // Show active sub-task if one exists and step hasn't ended
-                             : group.latestMessage // Otherwise, show the latest message received
+                           ? group.latestMessage
+                           : activeBuildingContextDisplay !== null
+                             ? activeBuildingContextDisplay
+                             : group.latestMessage
                          }
                       </p>
 
                       {/* MODIFIED: Expandable Details Section for Sub-Tasks */} 
                       {group.subTasks.length > 0 && (
                         <details className="group/details mt-3 pt-3 border-t border-border/50 w-full">
-                          <summary className="text-xs text-muted-foreground hover:text-primary cursor-pointer flex items-center group-open/details:mb-2">
+                          <summary className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--nd-text-disabled)] hover:text-[var(--nd-text-secondary)] cursor-pointer flex items-center group-open/details:mb-2">
                             <ChevronRight className="h-3 w-3 mr-1 transform transition-transform duration-200 group-open/details:rotate-90" />
                             Show {group.subTasks.length} {group.subTasks.length === 1 ? 'sub-task' : 'sub-tasks'}
                           </summary>
@@ -551,13 +521,11 @@ export function ResearchTimeline() {
                                  activeSubTask?.id === subTask.id;
 
                                return (
-                                <div 
+                                <div
                                   key={subTask.id}
                                   className={cn(
-                                    `text-xs p-3 rounded-md border bg-muted/30 flex items-start gap-3`,
-                                    subTask.isRefinement ? 'border-primary/20' : 'border-border/50',
-                                    // Add glow class if this subtask is active
-                                    isSubTaskActive && getGlowClass('BUILDING_CONTEXT') // Reuse category glow
+                                    "text-xs p-3 rounded-md border bg-[var(--nd-surface-raised)] flex items-start gap-3",
+                                    isSubTaskActive ? "border-[var(--nd-accent)]" : "border-[var(--nd-border)]"
                                   )}
                                 >
                                   {/* Sub-task Icon (Optional - could map based on subtask type if identifiable) */}
@@ -588,7 +556,7 @@ export function ResearchTimeline() {
                                       </div>
                                     </div>
                                     {/* Sub-task Latest Message */}
-                                    <p className="text-muted-foreground/80 break-words">
+                                    <p className="font-grotesk text-[var(--nd-text-disabled)] break-words">
                                       {subTask.latestMessage}
                                     </p>
                                     {/* Optional: Expand to see all updates for this specific sub-task */}

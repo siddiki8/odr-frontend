@@ -1,65 +1,48 @@
 "use client"
 
 import Image from "next/image"
-import Link from "next/link"
-import { Github, Mail } from "lucide-react"
 
 export function LandingFooter() {
   return (
-    <footer className="py-12 bg-gray-100 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-          {/* Luminary Info */}
-          <div className="flex items-center gap-4">
-            <Image
-              src="/luminary.png"
-              alt="Luminary AI Solutions LLC Logo"
-              width={40}
-              height={40}
-              className="rounded-sm"
-            />
-            <div>
-              <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">
-                Developed & Maintained by 
-                <a 
-                  href="https://luminarysolutions.ai"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-600 dark:text-blue-400 hover:underline ml-1"
-                >
-                  Luminary AI Solutions LLC
-                </a>
-              </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Building the future of AI research tools.</p>
-            </div>
-          </div>
-
-          {/* Links & Copyright */}
-          <div className="text-center md:text-right">
-            <div className="flex justify-center md:justify-end items-center gap-6 mb-3">
-              <a 
-                href="https://github.com/siddiki8/ODR-api"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white transition-colors"
-                aria-label="GitHub Repository"
-              >
-                <Github className="h-5 w-5" />
-              </a>
-              <a 
-                href="mailto:info@luminarysolutions.ai"
-                className="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white transition-colors"
-                aria-label="Contact Email"
-              >
-                <Mail className="h-5 w-5" />
-              </a>
-            </div>
-            <p className="text-xs text-gray-500 dark:text-gray-400">
-              &copy; {new Date().getFullYear()} Luminary AI Solutions LLC.
-            </p>
-          </div>
+    <footer className="border-t border-[var(--nd-border)] bg-[var(--nd-surface)]">
+      <div className="container mx-auto px-6 py-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+        {/* Wordmark + logos */}
+        <div className="flex items-center gap-3">
+          <Image src="/odr-api.png" alt="ODR-API" width={20} height={20} className="rounded-sm opacity-80" />
+          <span className="font-grotesk text-[13px] font-medium text-[var(--nd-text-display)]">ODR-API</span>
+          <span className="text-[var(--nd-border-visible)] font-mono text-[11px]">×</span>
+          <a
+            href="https://luminarysolutions.ai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 opacity-80 hover:opacity-100 transition-opacity"
+          >
+            <Image src="/luminary.png" alt="Luminary AI Solutions" width={18} height={18} className="rounded-sm" />
+            <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--nd-text-disabled)]">
+              LUMINARY
+            </span>
+          </a>
         </div>
+
+        <div className="flex items-center gap-6">
+          <a
+            href="https://github.com/siddiki8/ODR-api"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--nd-text-disabled)] hover:text-[var(--nd-text-secondary)] transition-colors"
+          >
+            GITHUB
+          </a>
+          <span className="text-[var(--nd-border-visible)] font-mono text-[11px]">|</span>
+          <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--nd-text-disabled)]">
+            MIT LICENSE
+          </span>
+        </div>
+
+        <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-[var(--nd-text-disabled)]">
+          &copy; {new Date().getFullYear()}
+        </span>
       </div>
     </footer>
   )
-} 
+}

@@ -1,9 +1,6 @@
 "use client"
 
 import { useResearch } from "@/hooks/use-research"
-import { motion } from "framer-motion"
-import { Search } from "lucide-react"
-import { cn } from "@/lib/utils"
 
 export function QueryDisplay() {
   const { currentQuery, isResearching } = useResearch()
@@ -11,32 +8,23 @@ export function QueryDisplay() {
   if (!currentQuery) return null
 
   return (
-    <motion.div
-      className="w-full mb-8"
-      initial={{ opacity: 0, y: -20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, type: "spring", stiffness: 300, damping: 30 }}
-    >
-      <div className="relative">
-        <div
-          className={cn(
-            "relative bg-background/30 dark:bg-[#0F2027]/80 backdrop-blur-sm rounded-lg p-4 border border-border shadow-md z-10",
+    <div className="w-full mb-8">
+      <div className="border border-[var(--nd-border-visible)] rounded-xl bg-[var(--nd-surface)] overflow-hidden">
+        <div className="px-6 py-4 border-b border-[var(--nd-border)] bg-[var(--nd-surface-raised)] flex items-center justify-between">
+          <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--nd-text-secondary)]">
+            RESEARCH QUERY
+          </p>
+          {isResearching && (
+            <span className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--nd-accent)] animate-pulse" />
+              <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--nd-accent)]">ACTIVE</span>
+            </span>
           )}
-        >
-          <div className="flex items-center gap-3">
-            <div className="bg-primary/10 p-2 rounded-full">
-              <Search className="h-5 w-5 text-primary" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-sm font-medium text-muted-foreground mb-1">RESEARCH QUERY</h3>
-              <p className="text-xl font-medium text-card-foreground">{currentQuery}</p>
-            </div>
-          </div>
         </div>
-
-        {isResearching && <div className="absolute inset-0 rounded-lg z-20 glowing-border"></div>}
+        <div className="px-6 py-4">
+          <p className="font-grotesk text-base text-[var(--nd-text-primary)] break-words">{currentQuery}</p>
+        </div>
       </div>
-    </motion.div>
+    </div>
   )
 }
-

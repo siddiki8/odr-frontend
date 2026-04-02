@@ -1,16 +1,11 @@
 "use client"
 
 import { useResearch } from "@/hooks/use-research"
-import { Card, CardContent } from "@/components/ui/card"
-import { motion } from "framer-motion"
-import { Search, Lightbulb, List, Target, MessageSquare, Flag } from "lucide-react"
 import type { ResearchPlan as ResearchPlanType } from "@/types/research"
 import type { WritingPlanSection } from "@/types/research"
 
-// Define props for the component
 interface ResearchPlanDisplayProps {
-  plan?: ResearchPlanType | null // Allow passing an optional plan
-  /** Card title (default: Research Plan). Use e.g. "Extraction plan" on CPE. */
+  plan?: ResearchPlanType | null
   heading?: string
 }
 
@@ -18,158 +13,110 @@ export function ResearchPlanDisplay({
   plan: planProp,
   heading = "Research Plan",
 }: ResearchPlanDisplayProps) {
-  // Use the hook only if no plan is passed via props
   const { plan: planFromHook } = useResearch()
-
-  // Determine which plan to use: prioritize the prop
   const planToDisplay = planProp !== undefined ? planProp : planFromHook
+  const typedPlan = planToDisplay as ResearchPlanType | null
 
-  const typedPlan = planToDisplay as ResearchPlanType | null;
-
-  if (!typedPlan) {
-    return null
-  }
+  if (!typedPlan) return null
 
   const { writing_plan, search_queries } = typedPlan
 
-  // --- Add Defensive Check --- 
   if (!writing_plan) {
-    // Handle the case where writing_plan itself is missing within the plan object
-    console.warn("ResearchPlanDisplay received plan object without writing_plan.", typedPlan);
+    console.warn("ResearchPlanDisplay received plan object without writing_plan.", typedPlan)
     return (
-      <Card className="bg-card/80 backdrop-blur-sm border-border shadow-lg overflow-hidden dark:bg-[#111921]/90">
-        <CardContent className="p-6 text-center text-muted-foreground">
-          Plan details are missing or incomplete.
-        </CardContent>
-      </Card>
-    );
-  }
-  // --- End Check ---
-
-  // Animation variants
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
-    },
-  }
-
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 },
+      <div className="border border-[var(--nd-border-visible)] rounded-xl bg-[var(--nd-surface)] p-6">
+        <p className="font-mono text-[11px] uppercase tracking-[0.06em] text-[var(--nd-text-disabled)]">
+          [PLAN DETAILS INCOMPLETE]
+        </p>
+      </div>
+    )
   }
 
   return (
-    <Card className="bg-card/80 backdrop-blur-sm border-border shadow-lg overflow-hidden dark:bg-[#111921]/90">
-      <div className="h-1 bg-gradient-to-r from-[#0F2027] via-[#203A43] to-[#2C5364]"></div>
-      <CardContent className="p-6">
-        <div className="flex items-center mb-6">
-          <Lightbulb className="h-5 w-5 mr-2 text-primary" />
-          <h2 className="text-xl font-bold text-card-foreground">{heading}</h2>
-        </div>
+    <div className="border border-[var(--nd-border-visible)] rounded-xl overflow-hidden bg-[var(--nd-surface)]">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-[var(--nd-border)] bg-[var(--nd-surface-raised)]">
+        <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--nd-text-secondary)]">
+          {heading.toUpperCase()}
+        </p>
+      </div>
 
-        <motion.div
-          className="grid grid-cols-1 gap-6"
-          variants={container}
-          initial="hidden"
-          animate="show"
-        >
-          {/* Research Goal (Original) */}
-          <motion.div variants={item} className="bg-background/30 dark:bg-black/20 rounded-lg p-4 border border-border">
-            <div className="flex gap-3 mb-4">
-              <div className="bg-primary/10 p-2 rounded-lg flex-shrink-0">
-                <Target className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="text-lg font-medium text-card-foreground pt-1">Research Goal</h3>
-            </div>
-            <div className="ml-11">
-              <p className="text-foreground break-words">{writing_plan.overall_goal}</p>
-            </div>
-          </motion.div>
+      <div className="px-6 py-6 space-y-8">
+        {/* Research Goal */}
+        <section>
+          <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--nd-text-disabled)] mb-3">RESEARCH GOAL</p>
+          <p className="font-grotesk text-sm text-[var(--nd-text-primary)] leading-relaxed break-words">
+            {writing_plan.overall_goal}
+          </p>
+        </section>
 
-          {/* Desired Tone (Original) */}
-          <motion.div variants={item} className="bg-background/30 dark:bg-black/20 rounded-lg p-4 border border-border">
-            <div className="flex gap-3 mb-4">
-              <div className="bg-primary/10 p-2 rounded-lg flex-shrink-0">
-                <MessageSquare className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="text-lg font-medium text-card-foreground pt-1">Desired Tone</h3>
-            </div>
-            <div className="ml-11">
-              <p className="text-foreground break-words">{writing_plan.desired_tone}</p>
-            </div>
-          </motion.div>
-          
-          {/* Search Queries */}
-          <motion.div variants={item} className="bg-background/30 dark:bg-black/20 rounded-lg p-4 border border-border">
-            <div className="flex gap-3 mb-4">
-              <div className="bg-primary/10 p-2 rounded-lg flex-shrink-0">
-                <Search className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="text-lg font-medium text-card-foreground pt-1">Search Queries</h3>
-            </div>
-            <div className="ml-11 space-y-3">
+        {/* Desired Tone */}
+        <section>
+          <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--nd-text-disabled)] mb-3">DESIRED TONE</p>
+          <p className="font-grotesk text-sm text-[var(--nd-text-secondary)] leading-relaxed break-words">
+            {writing_plan.desired_tone}
+          </p>
+        </section>
+
+        {/* Search Queries */}
+        {search_queries && search_queries.length > 0 && (
+          <section>
+            <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--nd-text-disabled)] mb-3">
+              SEARCH QUERIES — {search_queries.length}
+            </p>
+            <div className="space-y-2">
               {search_queries.map((query: string, index: number) => (
-                <div key={index} className="flex items-start gap-3">
-                  <div className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary border border-primary/20">
-                    {index + 1}
-                  </div>
-                  <div className="bg-muted/60 dark:bg-black/30 p-3 rounded-lg border border-border flex-grow">
-                    <p className="text-foreground break-words">{query}</p>
-                  </div>
+                <div key={index} className="flex items-start gap-4 border-b border-[var(--nd-border)] pb-2">
+                  <span className="font-mono text-[11px] text-[var(--nd-text-disabled)] shrink-0 mt-0.5">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <p className="font-grotesk text-sm text-[var(--nd-text-primary)] break-words flex-1">{query}</p>
                 </div>
               ))}
             </div>
-          </motion.div>
+          </section>
+        )}
 
-          {/* Report Sections */}
-          <motion.div variants={item} className="bg-background/30 dark:bg-black/20 rounded-lg p-4 border border-border">
-            <div className="flex gap-3 mb-4">
-              <div className="bg-primary/10 p-2 rounded-lg flex-shrink-0">
-                <List className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="text-lg font-medium text-card-foreground pt-1">Report Sections</h3>
-            </div>
-            <div className="ml-11 space-y-4">
+        {/* Report Sections */}
+        {writing_plan.sections && writing_plan.sections.length > 0 && (
+          <section>
+            <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--nd-text-disabled)] mb-3">
+              REPORT SECTIONS — {writing_plan.sections.length}
+            </p>
+            <div className="space-y-3">
               {writing_plan.sections.map((section: WritingPlanSection, index: number) => (
-                <motion.div
-                  key={index}
-                  className="bg-muted/60 dark:bg-black/30 p-4 rounded-lg border border-border"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                >
-                  <h4 className="font-medium text-primary mb-2">{section.title}</h4>
-                  <p className="text-foreground text-sm break-words">{section.guidance}</p>
-                </motion.div>
+                <div key={index} className="border border-[var(--nd-border)] rounded-lg p-4">
+                  <div className="flex items-start gap-3 mb-2">
+                    <span className="font-mono text-[11px] text-[var(--nd-text-disabled)] shrink-0">
+                      {String(index + 1).padStart(2, "0")} —
+                    </span>
+                    <p className="font-grotesk text-sm font-medium text-[var(--nd-text-display)]">{section.title}</p>
+                  </div>
+                  <p className="font-grotesk text-xs text-[var(--nd-text-secondary)] leading-relaxed ml-8 break-words">
+                    {section.guidance}
+                  </p>
+                </div>
               ))}
             </div>
-          </motion.div>
+          </section>
+        )}
 
-          {/* Additional Directives (Original) */}
-          {writing_plan.additional_directives && writing_plan.additional_directives.length > 0 && (
-            <motion.div variants={item} className="bg-background/30 dark:bg-black/20 rounded-lg p-4 border border-border">
-              <div className="flex gap-3 mb-4">
-                <div className="bg-primary/10 p-2 rounded-lg flex-shrink-0">
-                  <List className="h-5 w-5 text-primary" />
+        {/* Additional Directives */}
+        {writing_plan.additional_directives && writing_plan.additional_directives.length > 0 && (
+          <section>
+            <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--nd-text-disabled)] mb-3">
+              ADDITIONAL DIRECTIVES
+            </p>
+            <div className="space-y-2">
+              {writing_plan.additional_directives.map((directive: string, index: number) => (
+                <div key={index} className="border-l-2 border-[var(--nd-border-visible)] pl-4 py-1">
+                  <p className="font-grotesk text-sm text-[var(--nd-text-secondary)] break-words">{directive}</p>
                 </div>
-                <h3 className="text-lg font-medium text-card-foreground pt-1">Additional Directives</h3>
-              </div>
-              <div className="ml-11 space-y-4">
-                {writing_plan.additional_directives.map((directive: string, index: number) => (
-                  <div key={index} className="bg-muted/60 dark:bg-black/30 p-4 rounded-lg border border-border">
-                    <p className="text-foreground text-sm break-words">{directive}</p>
-                  </div>
-                ))}
-              </div>
-            </motion.div>
-          )}
-        </motion.div>
-      </CardContent>
-    </Card>
+              ))}
+            </div>
+          </section>
+        )}
+      </div>
+    </div>
   )
 }
-

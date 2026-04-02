@@ -18,9 +18,13 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        sans: ["var(--font-inter)", "system-ui", "sans-serif"],
+        sans: ["var(--font-grotesk)", "system-ui", "sans-serif"],
+        grotesk: ["var(--font-grotesk)", "DM Sans", "system-ui", "sans-serif"],
+        mono: ["var(--font-mono)", "JetBrains Mono", "monospace"],
+        doto: ["var(--font-doto)", "Space Mono", "monospace"],
       },
       colors: {
+        // shadcn compatibility
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -54,6 +58,23 @@ const config: Config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Nothing design tokens
+        nd: {
+          bg: "var(--nd-bg)",
+          surface: "var(--nd-surface)",
+          "surface-raised": "var(--nd-surface-raised)",
+          "border-subtle": "var(--nd-border)",
+          "border-visible": "var(--nd-border-visible)",
+          "text-disabled": "var(--nd-text-disabled)",
+          "text-secondary": "var(--nd-text-secondary)",
+          "text-primary": "var(--nd-text-primary)",
+          "text-display": "var(--nd-text-display)",
+          accent: "var(--nd-accent)",
+          "accent-subtle": "var(--nd-accent-subtle)",
+          success: "var(--nd-success)",
+          warning: "var(--nd-warning)",
+          interactive: "var(--nd-interactive)",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -80,4 +101,3 @@ const config: Config = {
 }
 
 export default config
-

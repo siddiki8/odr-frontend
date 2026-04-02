@@ -1,124 +1,79 @@
 "use client"
 
 import { useResearch } from "@/hooks/use-research"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ResearchTimeline } from "@/components/research-timeline"
 import { ResearchStats } from "@/components/research-stats"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Activity, BarChart2, FileSearch, Square } from "lucide-react"
-import { motion } from "framer-motion"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 export function ResearchViewer() {
   const { isResearching, messages, stopResearch } = useResearch()
   const [activeTab, setActiveTab] = useState("timeline")
 
   return (
-    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}>
-      <Card className="bg-card/80 backdrop-blur-sm border-border shadow-lg overflow-hidden dark:bg-[#111921]/90">
-        <CardHeader className="pb-4">
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="text-card-foreground text-xl">Research Progress</CardTitle>
-              <CardDescription className="text-muted-foreground">
-                {isResearching
-                  ? "Real-time updates on the research process"
-                  : messages.length > 0
-                    ? "Research complete"
-                    : "Submit a query to start researching"}
-              </CardDescription>
-            </div>
-            <div className="flex items-center space-x-2">
-              {isResearching && (
-                <motion.div
-                  animate={{
-                    scale: [1, 1.1, 1],
-                    opacity: [0.5, 1, 0.5],
-                  }}
-                  transition={{
-                    duration: 2,
-                    repeat: Number.POSITIVE_INFINITY,
-                    repeatType: "loop",
-                  }}
-                  className="h-2 w-2 rounded-full bg-primary mr-2"
-                />
-              )}
-              {isResearching && (
-                <TooltipProvider delayDuration={150}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="destructive"
-                        size="icon"
-                        onClick={stopResearch}
-                        className="h-7 w-7 flex-shrink-0"
-                      >
-                        <Square className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Stop Research</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
+    <div className="border border-[var(--nd-border-visible)] rounded-xl overflow-hidden bg-[var(--nd-surface)]">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-[var(--nd-border)] bg-[var(--nd-surface-raised)] flex items-center justify-between">
+        <div>
+          <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--nd-text-secondary)]">
+            RESEARCH PROGRESS
+          </p>
+          <p className="font-grotesk text-xs text-[var(--nd-text-disabled)] mt-1">
+            {isResearching
+              ? "Live — receiving updates"
+              : messages.length > 0
+              ? "Complete"
+              : "Waiting for query"}
+          </p>
+        </div>
+        {isResearching && (
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-[var(--nd-accent)] animate-pulse" />
+              <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--nd-accent)]">LIVE</span>
+            </span>
+            <Button variant="destructive" size="sm" onClick={stopResearch}>
+              STOP
+            </Button>
           </div>
-        </CardHeader>
-        <CardContent>
-          {messages.length > 0 ? (
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-2 mb-4 bg-muted p-1">
-                <TabsTrigger
-                  value="timeline"
-                  className="data-[state=active]:bg-background data-[state=active]:text-primary transition-all duration-300"
-                >
-                  <Activity className="h-4 w-4 mr-2" />
-                  Timeline
-                </TabsTrigger>
-                <TabsTrigger
-                  value="stats"
-                  className="data-[state=active]:bg-background data-[state=active]:text-primary transition-all duration-300"
-                >
-                  <BarChart2 className="h-4 w-4 mr-2" />
-                  Stats
-                </TabsTrigger>
-              </TabsList>
+        )}
+      </div>
 
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.3 }}
+      <div className="p-6">
+        {messages.length > 0 ? (
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="flex gap-1 mb-6 bg-transparent p-0 border-b border-[var(--nd-border)] pb-0">
+              <TabsTrigger
+                value="timeline"
+                className="font-mono text-[11px] uppercase tracking-[0.08em] px-0 pb-3 mr-6 rounded-none border-b-2 border-transparent data-[state=active]:border-[var(--nd-text-display)] data-[state=active]:text-[var(--nd-text-display)] text-[var(--nd-text-disabled)] bg-transparent"
               >
-                <TabsContent value="timeline" className="mt-0">
-                  <ResearchTimeline />
-                </TabsContent>
-                <TabsContent value="stats" className="mt-0">
-                  <ResearchStats />
-                </TabsContent>
-              </motion.div>
-            </Tabs>
-          ) : (
-            <motion.div
-              className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <FileSearch className="h-20 w-20 mb-6 opacity-20 text-primary" />
-              <h3 className="text-xl font-medium mb-3 text-card-foreground">Ready to Research</h3>
-              <p className="max-w-md text-muted-foreground">
-                Enter a research query and click "Start Research" to begin the process. You'll see real-time updates as
-                the AI explores and synthesizes information.
-              </p>
-            </motion.div>
-          )}
-        </CardContent>
-      </Card>
-    </motion.div>
+                TIMELINE
+              </TabsTrigger>
+              <TabsTrigger
+                value="stats"
+                className="font-mono text-[11px] uppercase tracking-[0.08em] px-0 pb-3 rounded-none border-b-2 border-transparent data-[state=active]:border-[var(--nd-text-display)] data-[state=active]:text-[var(--nd-text-display)] text-[var(--nd-text-disabled)] bg-transparent"
+              >
+                STATS
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="timeline" className="mt-0">
+              <ResearchTimeline />
+            </TabsContent>
+            <TabsContent value="stats" className="mt-0">
+              <ResearchStats />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <p className="font-grotesk text-base text-[var(--nd-text-secondary)] mb-2">Ready to research.</p>
+            <p className="font-mono text-[11px] uppercase tracking-[0.06em] text-[var(--nd-text-disabled)]">
+              ENTER A QUERY AND CLICK START RESEARCH
+            </p>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
-

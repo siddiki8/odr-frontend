@@ -2,42 +2,16 @@
 
 import { useCpe } from "@/hooks/use-cpe"
 import type { CompanyProfile } from "@/types/cpe"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import {
-  Building2,
-  Globe,
-  MapPin,
-  Users,
-  ExternalLink,
-  Download,
-  Briefcase,
-} from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { useToast } from "@/hooks/use-toast"
+import { useState } from "react"
 
-function ProfileCard({
-  profile,
-  index,
-}: {
-  profile: CompanyProfile
-  index: number
-}) {
+function ProfileCard({ profile, index }: { profile: CompanyProfile; index: number }) {
   const domain = profile.website
     ? (() => {
         try {
           return new URL(
-            profile.website.startsWith("http")
-              ? profile.website
-              : `https://${profile.website}`,
+            profile.website.startsWith("http") ? profile.website : `https://${profile.website}`,
           ).hostname
         } catch {
           return profile.website
@@ -45,102 +19,89 @@ function ProfileCard({
       })()
     : null
 
+  const known = new Set(["name", "website", "description", "industry", "location", "size", "founded", "linkedin", "email", "phone"])
+  const extras = Object.entries(profile).filter(
+    ([k, v]) => !known.has(k) && v !== undefined && v !== null && v !== "",
+  )
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.04 }}
-      className="bg-background/50 dark:bg-black/20 rounded-lg border border-border/50 p-4 hover:border-primary/30 hover:shadow-md transition-all duration-200"
-    >
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <h3 className="font-semibold text-base text-card-foreground truncate">
-          {profile.name ?? "Unknown Company"}
-        </h3>
+    <div className="border border-[var(--nd-border)] rounded-lg bg-[var(--nd-surface)] p-4">
+      {/* Header row */}
+      <div className="flex items-start justify-between gap-2 mb-3">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-[var(--nd-text-disabled)] mb-1">
+            {String(index + 1).padStart(2, "0")} — COMPANY
+          </p>
+          <h3 className="font-grotesk text-base font-medium text-[var(--nd-text-display)]">
+            {profile.name ?? "Unknown Company"}
+          </h3>
+        </div>
         {profile.website && (
           <a
-            href={
-              profile.website.startsWith("http")
-                ? profile.website
-                : `https://${profile.website}`
-            }
+            href={profile.website.startsWith("http") ? profile.website : `https://${profile.website}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="shrink-0 text-primary hover:text-primary/80 transition-colors"
+            className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--nd-text-secondary)] hover:text-[var(--nd-text-primary)] border-b border-[var(--nd-border-visible)] shrink-0"
             aria-label={`Visit ${profile.name ?? "company"} website`}
           >
-            <ExternalLink className="h-4 w-4" />
+            {domain ?? "VISIT"}
           </a>
         )}
       </div>
 
       {profile.description && (
-        <p className="text-sm text-muted-foreground mb-3 line-clamp-3">
+        <p className="font-grotesk text-sm text-[var(--nd-text-secondary)] mb-3 line-clamp-3">
           {profile.description}
         </p>
       )}
 
-      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-        {domain && (
-          <span className="flex items-center gap-1">
-            <Globe className="h-3 w-3" />
-            {domain}
-          </span>
-        )}
+      {/* Metadata rows */}
+      <div className="space-y-1 border-t border-[var(--nd-border)] pt-3">
         {profile.location && (
-          <span className="flex items-center gap-1">
-            <MapPin className="h-3 w-3" />
-            {profile.location}
-          </span>
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--nd-text-disabled)]">LOCATION</span>
+            <span className="font-mono text-[11px] text-[var(--nd-text-secondary)]">{profile.location}</span>
+          </div>
         )}
         {profile.industry && (
-          <span className="flex items-center gap-1">
-            <Briefcase className="h-3 w-3" />
-            {profile.industry}
-          </span>
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--nd-text-disabled)]">INDUSTRY</span>
+            <span className="font-mono text-[11px] text-[var(--nd-text-secondary)]">{profile.industry}</span>
+          </div>
         )}
         {profile.size && (
-          <span className="flex items-center gap-1">
-            <Users className="h-3 w-3" />
-            {profile.size}
-          </span>
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--nd-text-disabled)]">SIZE</span>
+            <span className="font-mono text-[11px] text-[var(--nd-text-secondary)]">{profile.size}</span>
+          </div>
+        )}
+        {profile.founded && (
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--nd-text-disabled)]">FOUNDED</span>
+            <span className="font-mono text-[11px] text-[var(--nd-text-secondary)]">{String(profile.founded)}</span>
+          </div>
         )}
       </div>
 
-      {/* Extra fields rendered as badges */}
-      {(() => {
-        const known = new Set([
-          "name",
-          "website",
-          "description",
-          "industry",
-          "location",
-          "size",
-          "founded",
-          "linkedin",
-          "email",
-          "phone",
-        ])
-        const extras = Object.entries(profile).filter(
-          ([k, v]) => !known.has(k) && v !== undefined && v !== null && v !== "",
-        )
-        if (extras.length === 0) return null
-        return (
-          <div className="mt-3 flex flex-wrap gap-1">
-            {extras.slice(0, 6).map(([k, v]) => (
-              <Badge key={k} variant="secondary" className="text-[10px]">
-                {k.replace(/_/g, " ")}: {String(v)}
-              </Badge>
-            ))}
-          </div>
-        )
-      })()}
-    </motion.div>
+      {extras.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1">
+          {extras.slice(0, 6).map(([k, v]) => (
+            <span
+              key={k}
+              className="font-mono text-[10px] uppercase tracking-[0.04em] border border-[var(--nd-border-visible)] text-[var(--nd-text-disabled)] px-2 py-0.5 rounded-full"
+            >
+              {k.replace(/_/g, " ")}: {String(v)}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
 export function CpeProfiles() {
-  const { profiles, currentQuery, currentLocation, profileCount, isRunning } = useCpe()
-  const { toast } = useToast()
+  const { profiles, currentQuery, currentLocation, profileCount } = useCpe()
+  const [downloadStatus, setDownloadStatus] = useState<string | null>(null)
 
   const handleDownload = () => {
     if (!profiles || profiles.length === 0) return
@@ -154,46 +115,47 @@ export function CpeProfiles() {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-    toast({ title: "Downloaded", description: "Profiles saved as JSON." })
+    setDownloadStatus("[DOWNLOADED]")
+    setTimeout(() => setDownloadStatus(null), 2000)
   }
 
   if (!profiles || profiles.length === 0) return null
 
   return (
-    <Card className="bg-card/80 backdrop-blur-sm border-border shadow-lg overflow-hidden">
-      <div className="h-1 bg-gradient-to-r from-[#0F2027] via-[#203A43] to-[#2C5364]" />
-      <CardHeader className="pb-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Building2 className="h-5 w-5 text-primary" />
-            <div>
-              <CardTitle className="text-xl text-card-foreground">
-                Extracted Profiles
-              </CardTitle>
-              <CardDescription>
-                {profileCount || profiles.length} companies found
-                {currentQuery && ` for "${currentQuery}"`}
-                {currentLocation && ` in ${currentLocation}`}
-              </CardDescription>
-            </div>
-          </div>
+    <div className="border border-[var(--nd-border-visible)] rounded-xl overflow-hidden bg-[var(--nd-surface)]">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-[var(--nd-border)] bg-[var(--nd-surface-raised)] flex items-center justify-between">
+        <div>
+          <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--nd-text-secondary)]">
+            EXTRACTED PROFILES
+          </p>
+          <p className="font-grotesk text-xs text-[var(--nd-text-disabled)] mt-1">
+            {profileCount || profiles.length} companies found
+            {currentQuery && ` for "${currentQuery}"`}
+            {currentLocation && ` in ${currentLocation}`}
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {downloadStatus && (
+            <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-[var(--nd-success)]">
+              {downloadStatus}
+            </span>
+          )}
           <Button variant="outline" size="sm" onClick={handleDownload}>
-            <Download className="h-4 w-4 mr-2" />
-            Export JSON
+            EXPORT JSON
           </Button>
         </div>
-      </CardHeader>
-      <CardContent>
+      </div>
+
+      <div className="p-6">
         <ScrollArea className="h-[640px] pr-3">
           <div className="grid grid-cols-1 gap-3">
-            <AnimatePresence initial={false}>
-              {profiles.map((profile, i) => (
-                <ProfileCard key={i} profile={profile} index={i} />
-              ))}
-            </AnimatePresence>
+            {profiles.map((profile, i) => (
+              <ProfileCard key={i} profile={profile} index={i} />
+            ))}
           </div>
         </ScrollArea>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

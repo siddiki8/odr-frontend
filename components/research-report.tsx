@@ -3,11 +3,7 @@
 import { useResearch } from "@/hooks/use-research"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Download, Copy, FileText } from "lucide-react"
 import { useState } from "react"
-import { useToast } from "@/hooks/use-toast"
-import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
@@ -15,35 +11,23 @@ import remarkBreaks from "remark-breaks"
 
 export function ResearchReport() {
   const { report } = useResearch()
-  const { toast } = useToast()
-  const [copied, setCopied] = useState(false)
+  const [copyStatus, setCopyStatus] = useState<string | null>(null)
   const router = useRouter()
 
   const handleCopy = async () => {
     if (!report) return
-
     try {
       await navigator.clipboard.writeText(report)
-      setCopied(true)
-      toast({
-        title: "Copied to clipboard",
-        description: "The research report has been copied to your clipboard.",
-        className: "bg-popover border-border",
-      })
-      setTimeout(() => setCopied(false), 2000)
-    } catch (err) {
-      toast({
-        title: "Failed to copy",
-        description: "Could not copy the report to clipboard.",
-        variant: "destructive",
-        className: "bg-destructive border-destructive-foreground",
-      })
+      setCopyStatus("[COPIED]")
+      setTimeout(() => setCopyStatus(null), 2000)
+    } catch {
+      setCopyStatus("[COPY FAILED]")
+      setTimeout(() => setCopyStatus(null), 2000)
     }
   }
 
   const handleDownload = () => {
     if (!report) return
-
     const blob = new Blob([report], { type: "text/markdown" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
@@ -53,84 +37,87 @@ export function ResearchReport() {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-
-    toast({
-      title: "Report downloaded",
-      description: "The research report has been downloaded as a Markdown file.",
-      className: "bg-popover border-border",
-    })
   }
 
-  if (!report) {
-    return null
-  }
+  if (!report) return null
 
   return (
-    <Card className="bg-card/80 backdrop-blur-sm border-border shadow-lg overflow-hidden">
-      <div className="h-1 bg-gradient-to-r from-[#0F2027] via-[#203A43] to-[#2C5364]"></div>
-      <CardContent className="p-6">
-        <motion.div
-          className="flex justify-between items-center mb-6"
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <div className="flex items-center">
-            <FileText className="h-5 w-5 mr-2 text-primary" />
-            <h2 className="text-xl font-bold text-card-foreground">Final Research Report</h2>
-          </div>
+    <div className="border border-[var(--nd-border-visible)] rounded-xl overflow-hidden bg-[var(--nd-surface)]">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-[var(--nd-border)] bg-[var(--nd-surface-raised)] flex items-center justify-between">
+        <p className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--nd-text-secondary)]">
+          FINAL RESEARCH REPORT
+        </p>
+        <div className="flex items-center gap-3">
+          {copyStatus && (
+            <span className="font-mono text-[11px] uppercase tracking-[0.06em] text-[var(--nd-success)]">
+              {copyStatus}
+            </span>
+          )}
+          <Button variant="ghost" size="sm" onClick={handleCopy}>
+            COPY
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleDownload}>
+            DOWNLOAD .MD
+          </Button>
+        </div>
+      </div>
 
-          <div className="flex space-x-2 items-center">
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-background/60 border-border text-foreground hover:bg-muted hover:text-primary transition-all duration-200"
-              onClick={handleCopy}
-            >
-              <Copy className="h-4 w-4 mr-2" />
-              {copied ? "Copied" : "Copy"}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="bg-background/60 border-border text-foreground hover:bg-muted hover:text-primary transition-all duration-200"
-              onClick={handleDownload}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Download
-            </Button>
-          </div>
-        </motion.div>
-
+      <div className="p-6">
         <ScrollArea className="h-[600px] pr-4">
-          <motion.div
-            className="bg-background/80 rounded-lg p-8 border border-border shadow-md"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5 }}
-          >
-            <div className="markdown">
-              <ReactMarkdown 
-                remarkPlugins={[remarkGfm, remarkBreaks]}
-                components={{
-                  a: ({node, ...props}) => <a {...props} className="text-blue-600 dark:text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer" />,
-                  table: ({node, ...props}) => <table {...props} className="min-w-full border border-border my-4" />,
-                  thead: ({node, ...props}) => <thead {...props} className="bg-muted" />,
-                  th: ({node, ...props}) => <th {...props} className="border border-border p-2 text-left" />,
-                  td: ({node, ...props}) => <td {...props} className="border border-border p-2" />,
-                  h1: ({node, ...props}) => <h1 {...props} className="text-2xl font-bold mt-6 mb-4" />,
-                  h2: ({node, ...props}) => <h2 {...props} className="text-xl font-bold mt-5 mb-3" />,
-                  h3: ({node, ...props}) => <h3 {...props} className="text-lg font-bold mt-4 mb-2" />,
-                  p: ({node, ...props}) => <p {...props} className="mb-4" />
-                }}
-              >
-                {report || ""} 
-              </ReactMarkdown>
-            </div>
-          </motion.div>
+          <div className="prose prose-sm max-w-none">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm, remarkBreaks]}
+              components={{
+                a: ({ node, ...props }) => (
+                  <a {...props} className="text-[var(--nd-accent)] hover:underline" target="_blank" rel="noopener noreferrer" />
+                ),
+                table: ({ node, ...props }) => (
+                  <table {...props} className="min-w-full border border-[var(--nd-border)] my-4 font-mono text-sm" />
+                ),
+                thead: ({ node, ...props }) => (
+                  <thead {...props} className="bg-[var(--nd-surface-raised)]" />
+                ),
+                th: ({ node, ...props }) => (
+                  <th {...props} className="border border-[var(--nd-border)] p-2 text-left font-mono text-[11px] uppercase tracking-[0.06em] text-[var(--nd-text-secondary)]" />
+                ),
+                td: ({ node, ...props }) => (
+                  <td {...props} className="border border-[var(--nd-border)] p-2 font-grotesk text-sm text-[var(--nd-text-primary)]" />
+                ),
+                h1: ({ node, ...props }) => (
+                  <h1 {...props} className="font-grotesk text-2xl font-medium text-[var(--nd-text-display)] mt-8 mb-4" />
+                ),
+                h2: ({ node, ...props }) => (
+                  <h2 {...props} className="font-grotesk text-xl font-medium text-[var(--nd-text-display)] mt-6 mb-3" />
+                ),
+                h3: ({ node, ...props }) => (
+                  <h3 {...props} className="font-grotesk text-base font-medium text-[var(--nd-text-primary)] mt-5 mb-2" />
+                ),
+                p: ({ node, ...props }) => (
+                  <p {...props} className="font-grotesk text-sm text-[var(--nd-text-primary)] mb-4 leading-relaxed" />
+                ),
+                code: ({ node, ...props }) => (
+                  <code {...props} className="font-mono text-[12px] bg-[var(--nd-surface-raised)] border border-[var(--nd-border)] px-1.5 py-0.5 rounded text-[var(--nd-text-primary)]" />
+                ),
+                pre: ({ node, ...props }) => (
+                  <pre {...props} className="font-mono text-[12px] bg-[var(--nd-surface-raised)] border border-[var(--nd-border)] rounded-lg p-4 overflow-x-auto mb-4" />
+                ),
+                ul: ({ node, ...props }) => (
+                  <ul {...props} className="font-grotesk text-sm text-[var(--nd-text-primary)] mb-4 space-y-1 list-disc pl-5" />
+                ),
+                ol: ({ node, ...props }) => (
+                  <ol {...props} className="font-grotesk text-sm text-[var(--nd-text-primary)] mb-4 space-y-1 list-decimal pl-5" />
+                ),
+                blockquote: ({ node, ...props }) => (
+                  <blockquote {...props} className="border-l-2 border-[var(--nd-border-visible)] pl-4 text-[var(--nd-text-secondary)] my-4" />
+                ),
+              }}
+            >
+              {report}
+            </ReactMarkdown>
+          </div>
         </ScrollArea>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
-

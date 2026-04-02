@@ -92,7 +92,7 @@ export function Header() {
 
           {/* GitHub icon */}
           <a
-            href="https://github.com/siddiki8/ODR-api"
+            href="https://github.com/Luminary-AI-Solutions/ODR-api"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[var(--nd-text-disabled)] hover:text-[var(--nd-text-secondary)] transition-colors"
@@ -120,7 +120,7 @@ export function Header() {
         <div className="flex md:hidden items-center gap-3">
           {/* GitHub icon */}
           <a
-            href="https://github.com/siddiki8/ODR-api"
+            href="https://github.com/Luminary-AI-Solutions/ODR-api"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[var(--nd-text-disabled)] hover:text-[var(--nd-text-secondary)] transition-colors"

@@ -26,7 +26,7 @@ export function LandingFooter() {
 
         <div className="flex items-center gap-6">
           <a
-            href="https://github.com/siddiki8/ODR-api"
+            href="https://github.com/Luminary-AI-Solutions/ODR-api"
             target="_blank"
             rel="noopener noreferrer"
             className="font-mono text-[11px] uppercase tracking-[0.08em] text-[var(--nd-text-disabled)] hover:text-[var(--nd-text-secondary)] transition-colors"

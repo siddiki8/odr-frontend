@@ -3,7 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Github, MonitorPlay, LayoutGrid, Scaling, FileText } from "lucide-react"
+import { Github, MonitorPlay, LayoutGrid, Scaling, FileText, Building2 } from "lucide-react"
 
 export function Header() {
   return (
@@ -45,6 +45,11 @@ export function Header() {
           <Button variant="ghost" size="sm" asChild className="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
             <Link href="/reports">
               <FileText className="mr-1.5 h-4 w-4" /> Reports
+            </Link>
+          </Button>
+          <Button variant="ghost" size="sm" asChild className="text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800">
+            <Link href="/cpe">
+              <Building2 className="mr-1.5 h-4 w-4" /> CPE
             </Link>
           </Button>
           <div className="h-6 w-px bg-gray-300 dark:bg-gray-700 mx-1"></div> {/* Separator */}

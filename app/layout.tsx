@@ -1,4 +1,5 @@
 import type React from "react"
+import type { Metadata } from "next"
 import "@/app/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Inter } from "next/font/google"
@@ -14,6 +15,13 @@ const inter = Inter({
   variable: "--font-inter",
   display: "swap",
 })
+
+export const metadata: Metadata = {
+  generator: "v0.dev",
+  icons: {
+    icon: "/odr-api.png",
+  },
+}
 
 export default function RootLayout({
   children,
@@ -35,9 +43,3 @@ export default function RootLayout({
     </html>
   )
 }
-
-import './globals.css'
-
-export const metadata = {
-      generator: 'v0.dev'
-    };

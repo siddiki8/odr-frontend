@@ -20,13 +20,13 @@ export function CTASection() {
             <Link href="/deep_research">TRY DEMO</Link>
           </Button>
           <Button size="lg" variant="outline" asChild>
-            <a href="https://github.com/siddiki8/ODR-api" target="_blank" rel="noopener noreferrer">
+            <a href="https://github.com/Luminary-AI-Solutions/ODR-api" target="_blank" rel="noopener noreferrer">
               GITHUB
             </a>
           </Button>
           <Button size="lg" variant="ghost" asChild>
             <a
-              href="https://github.com/siddiki8/ODR-api/blob/main/README.md#contributing"
+              href="https://github.com/Luminary-AI-Solutions/ODR-api/blob/main/README.md#contributing"
               target="_blank"
               rel="noopener noreferrer"
             >

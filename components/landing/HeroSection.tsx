@@ -66,7 +66,7 @@ export function HeroSection() {
                 <Link href="/deep_research">TRY THE DEMO</Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <a href="https://github.com/siddiki8/ODR-api" target="_blank" rel="noopener noreferrer">
+                <a href="https://github.com/Luminary-AI-Solutions/ODR-api" target="_blank" rel="noopener noreferrer">
                   VIEW SOURCE
                 </a>
               </Button>

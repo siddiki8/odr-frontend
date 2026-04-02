@@ -64,7 +64,7 @@ export default function Home() {
           <AlertTriangle className="h-5 w-5" />
           <AlertTitle className="font-bold text-yellow-800 dark:text-yellow-200">Warning!</AlertTitle>
           <AlertDescription>
-            Currently using a small model for writing completions for testing and stability. Larger and more intelligent models generate significantly more powerful results. Tokens aren't free though :D. Interested in funding or collaboration? Contact <a href="mailto:a.siddiki@proton.me" className="font-medium underline hover:text-yellow-900 dark:hover:text-yellow-100">a.siddiki@proton.me</a>
+            Currently using a small model for writing completions for testing and stability. Larger and more intelligent models generate significantly more powerful results. Tokens aren't free though :D. Interested in funding or collaboration? Contact <a href="mailto:siddiki@luminarysoutions.ai" className="font-medium underline hover:text-yellow-900 dark:hover:text-yellow-100">siddiki@luminarysoutions.ai</a>
           </AlertDescription>
         </Alert>
 

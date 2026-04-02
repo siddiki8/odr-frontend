@@ -234,8 +234,8 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
         stopPolling();
       }
        if (currentQuery && !initialMessageSentRef.current) {
-         console.log("Connection open, sending start_research for:", currentQuery);
-         sendJsonMessage({ type: "start_research", query: currentQuery });
+         console.log("Connection open, sending research request for:", currentQuery);
+         sendJsonMessage({ query: currentQuery, max_search_tasks: null });
          initialMessageSentRef.current = true;
        }
     },
@@ -303,8 +303,8 @@ export function ResearchProvider({ children }: { children: ReactNode }) {
       setSocketUrl(fullWsUrl);
 
       if (readyState === ReadyState.OPEN) {
-        console.log("Already connected, sending start_research immediately for:", query);
-        sendJsonMessage({ type: "start_research", query: query });
+        console.log("Already connected, sending research request immediately for:", query);
+        sendJsonMessage({ query: query, max_search_tasks: null });
         initialMessageSentRef.current = true;
       }
     },

@@ -10,9 +10,14 @@ import type { WritingPlanSection } from "@/types/research"
 // Define props for the component
 interface ResearchPlanDisplayProps {
   plan?: ResearchPlanType | null // Allow passing an optional plan
+  /** Card title (default: Research Plan). Use e.g. "Extraction plan" on CPE. */
+  heading?: string
 }
 
-export function ResearchPlanDisplay({ plan: planProp }: ResearchPlanDisplayProps) {
+export function ResearchPlanDisplay({
+  plan: planProp,
+  heading = "Research Plan",
+}: ResearchPlanDisplayProps) {
   // Use the hook only if no plan is passed via props
   const { plan: planFromHook } = useResearch()
 
@@ -63,7 +68,7 @@ export function ResearchPlanDisplay({ plan: planProp }: ResearchPlanDisplayProps
       <CardContent className="p-6">
         <div className="flex items-center mb-6">
           <Lightbulb className="h-5 w-5 mr-2 text-primary" />
-          <h2 className="text-xl font-bold text-card-foreground">Research Plan</h2>
+          <h2 className="text-xl font-bold text-card-foreground">{heading}</h2>
         </div>
 
         <motion.div
